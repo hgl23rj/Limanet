@@ -1,6 +1,4 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
+<html lang="pt-BR"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Limanet — Sistema de Nutrição</title>
@@ -20,7 +18,16 @@ button{cursor:pointer}
 /* LOGIN */
 #loginScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,#1b4332,#2d6a4f 50%,#52b788)}
 .loginBox{background:#fff;border-radius:10px;padding:32px 36px;width:min(400px,94vw);box-shadow:0 20px 60px rgba(0,0,0,.35)}
-.loginBox h1{margin:0 0 4px;font-size:1.6rem;color:var(--primary2)}
+.loginLogo{display:block;width:104px;height:104px;object-fit:contain;margin:0 auto 14px;border-radius:12px}
+.loginBox h1{margin:0 0 4px;font-size:1.6rem;color:var(--primary2);text-align:center}
+.loginBox .sub{text-align:center}
+.loginPassWrap{position:relative;display:flex;align-items:center}
+.loginPassWrap input{padding-right:76px}
+.loginPassToggle{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:0;background:#edf5ef;color:var(--primary2);border-radius:4px;padding:5px 8px;font-size:11px;font-weight:700}
+.loginPassToggle:focus{outline:2px solid var(--accent);outline-offset:1px}
+.topbar .brand-wrap{display:flex;align-items:center;gap:8px;min-width:0}
+.topbar .brand-logo{width:30px;height:30px;object-fit:contain;border-radius:5px;background:#fff;padding:2px}
+
 .loginBox .sub{color:var(--muted);margin-bottom:22px}
 .contactFooter{margin-top:18px;padding-top:14px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);line-height:1.6}
 .contactFooter a{color:var(--primary);font-weight:600;text-decoration:none}
@@ -156,12 +163,16 @@ tr.clickable:hover{background:#e3f2fa}
 <!-- LOGIN -->
 <div id="loginScreen">
   <div class="loginBox">
+    <img class="loginLogo" src="https://i.imgur.com/AHJ88Yz.jpeg" alt="Logo Limanet" referrerpolicy="no-referrer">
     <h1>Limanet</h1>
     <div class="sub">Sistema de Avaliação e Terapia Nutricional<br>Dr. Francisco Lima · CRN-4 26101256</div>
     <label for="loginUser">Login do usuário</label>
-    <input id="loginUser" name="loginUser" value="" autocomplete="username" placeholder="Utilizador">
+    <input id="loginUser" name="loginUser" value="" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Utilizador">
     <label for="loginPass">Senha</label>
-    <input id="loginPass" name="loginPass" type="password" value="" autocomplete="current-password" placeholder="Senha">
+    <div class="loginPassWrap">
+      <input id="loginPass" name="loginPass" type="password" value="" autocomplete="new-password" placeholder="Senha" aria-label="Senha">
+      <button type="button" class="loginPassToggle" id="toggleLoginPass" onclick="alternarVisibilidadeSenha()" aria-pressed="false">Mostrar</button>
+    </div>
     <button class="btn" onclick="doLogin()">Entrar</button>
   </div>
 </div>
@@ -169,8 +180,8 @@ tr.clickable:hover{background:#e3f2fa}
 <!-- APP -->
 <div id="app">
   <div class="topbar">
-    <span class="brand">Limanet</span>
-    <span style="opacity:.85;font-size:12px">CRN-4 26101256 · <span id="topoRelogio"></span></span>
+    <span class="brand-wrap"><img class="brand-logo" src="https://i.imgur.com/AHJ88Yz.jpeg" alt="" referrerpolicy="no-referrer"><span class="brand">Limanet</span></span>
+    <span style="opacity:.85;font-size:12px">CRN-4 26101256 · <span id="topoRelogio">24/10/2026 16:31:27</span></span>
     <span class="user" id="lblUser"></span>
     <button onclick="doLogout()">Sair</button>
   </div>
@@ -404,6 +415,17 @@ function esc(s){ return String(s??'').replace(/[&<>"']/g,c=>({ '&':'&amp;','<':'
 /* ========= LOGIN ========= */
 /* URL da API no Render — altere após o deploy */
 const LIMANET_API = (window.LIMANET_API_URL || 'https://limanet-api.onrender.com').replace(/\/$/, '');
+
+function alternarVisibilidadeSenha(){
+  const campo = document.getElementById('loginPass');
+  const botao = document.getElementById('toggleLoginPass');
+  if (!campo || !botao) return;
+  const mostrar = campo.type === 'password';
+  campo.type = mostrar ? 'text' : 'password';
+  botao.textContent = mostrar ? 'Ocultar' : 'Mostrar';
+  botao.setAttribute('aria-pressed', String(mostrar));
+  campo.focus();
+}
 
 async function doLogin(){
   const user = (document.getElementById('loginUser').value || '').trim();
@@ -2011,5 +2033,5 @@ function atualizarRelogio(){
 setInterval(atualizarRelogio,1000);
 atualizarRelogio();
 </script>
-</body>
-</html>
+
+</body></html>
