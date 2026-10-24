@@ -1,0 +1,19 @@
+{
+  "name": "limanet-api",
+  "version": "1.0.0",
+  "description": "API de login seguro do Limanet (Render)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "hash": "node -e \"const b=require('bcryptjs');const s=process.argv[1]||'agua';console.log(b.hashSync(s,10))\""
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "express": "^4.21.0",
+    "jsonwebtoken": "^9.0.2"
+  }
+}
