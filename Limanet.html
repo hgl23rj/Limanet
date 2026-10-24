@@ -537,17 +537,92 @@ function viewInicio(c){
   </div>`;
 }
 function $(sel){ return document.querySelector(sel); }
-function imprimirA4(){
-  /* Prefer dedicated print region when present */
-  const hasPrint=document.getElementById('printArea');
-  if(hasPrint){
-    document.body.classList.remove('print-content');
-  } else {
-    document.body.classList.add('print-content');
+
+function imprimirA4() {
+  const area = document.getElementById('printArea');
+  const conteudo = area || document.getElementById('content');
+
+  if (!conteudo) {
+    toast('Não foi encontrado conteúdo para imprimir.');
+    return;
   }
-  window.print();
-  setTimeout(()=>document.body.classList.remove('print-content'),500);
+
+  // Abre a janela imediatamente, durante o clique do usuário.
+  const janela = window.open('', '_blank');
+
+  if (!janela) {
+    toast('A janela de impressão foi bloqueada. Permita pop-ups para este site.');
+    return;
+  }
+
+  // Copia os estilos existentes do Limanet.
+  const estilos = Array.from(
+    document.head.querySelectorAll('style, link[rel="stylesheet"]')
+  ).map(el => el.outerHTML).join('\n');
+
+  // Copia apenas o conteúdo que deve ser impresso.
+  const copia = conteudo.cloneNode(true);
+  copia.id = 'printArea';
+
+  // Retira botões e elementos interativos da impressão.
+  copia.querySelectorAll(
+    'button, .no-print, input[type="button"], input[type="submit"]'
+  ).forEach(el => el.remove());
+
+  janela.document.open();
+  janela.document.write(`
+    <!DOCTYPE html>
+    <html lang="pt-BR">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <title>Imprimir — Limanet</title>
+      ${estilos}
+      <style>
+        @page { size: A4 portrait; margin: 12mm; }
+        html, body {
+          background: #fff !important;
+          color: #111 !important;
+          margin: 0;
+          padding: 0;
+          height: auto !important;
+          font-family: Arial, sans-serif;
+        }
+        #printArea {
+          display: block !important;
+          position: static !important;
+          width: 100% !important;
+          max-width: 100% !important;
+          height: auto !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          visibility: visible !important;
+          background: #fff !important;
+          color: #111 !important;
+          box-shadow: none !important;
+          border: 0 !important;
+        }
+        #printArea, #printArea * {
+          visibility: visible !important;
+        }
+        @media print {
+          body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          button, .no-print { display: none !important; }
+        }
+      </style>
+    </head>
+    <body>${copia.outerHTML}</body>
+    </html>
+  `);
+  janela.document.close();
+
+  // Aguarda o carregamento do conteúdo antes de imprimir.
+  janela.addEventListener('load', function () {
+    janela.focus();
+    janela.print();
+  }, { once: true });
 }
+
 function pacOptions(selId){
   const id=selId??selectedPacienteId;
   return DB.pacientes.map(p=>`<option value="${p.id}" ${p.id==id?'selected':''}>${esc(p.nome)} (${ageFrom(p.nasc)} a)</option>`).join('');
