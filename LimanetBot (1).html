@@ -1,0 +1,2055 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Limanet — Sistema de Nutrição</title>
+<style>
+:root{
+  --bg:#e8f0ea; --panel:#fff; --line:#c5d5c8; --text:#1a2a35; --muted:#5a6f7d;
+  --primary:#2d6a4f; --primary2:#1b4332; --accent:#40916c; --danger:#c0392b;
+  --menu:#1b4332; --menuHover:#2d6a4f; --header:#1b4332;
+  --ok:#1e7e4a; --warn:#b8860b;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;font-family:"Segoe UI",Tahoma,Arial,sans-serif;background:var(--bg);color:var(--text);font-size:13px}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.hidden{display:none!important}
+
+/* LOGIN */
+#loginScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,#1b4332,#2d6a4f 50%,#52b788)}
+.loginBox{background:#fff;border-radius:10px;padding:32px 36px;width:min(400px,94vw);box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.loginBox h1{margin:0 0 4px;font-size:1.6rem;color:var(--primary2)}
+.loginBox .sub{color:var(--muted);margin-bottom:22px}
+.contactFooter{margin-top:18px;padding-top:14px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);line-height:1.6}
+.contactFooter a{color:var(--primary);font-weight:600;text-decoration:none}
+.contactFooter a:hover{text-decoration:underline}
+.teia-wrap{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start}
+.teia-svg{background:#f0f7f2;border:1px solid var(--line);border-radius:10px;width:100%;max-width:360px;height:auto;display:block}
+.teia-wrap{max-width:100%;overflow:hidden}
+.teia-node{cursor:pointer}
+.teia-node circle{fill:#d8f3dc;stroke:#2d6a4f;stroke-width:2;transition:.2s}
+.teia-node text{font-size:11px;fill:#1b4332;pointer-events:none;font-weight:600}
+.teia-node.on circle{fill:#2d6a4f;stroke:#1b4332}
+.teia-node.on text{fill:#fff}
+.teia-node.warn circle{fill:#fff3cd;stroke:#b8860b}
+.sintoma-item{display:flex;gap:8px;align-items:flex-start;padding:6px 8px;border-bottom:1px solid #eef2f0;font-size:12px}
+.sintoma-item:hover{background:#f3faf5}
+.sintoma-item input{margin-top:2px}
+.chip{display:inline-block;background:#d8f3dc;color:#1b4332;border-radius:12px;padding:2px 8px;margin:2px;font-size:11px;font-weight:700}
+.chip-warn{background:#fff3cd;color:#7a5b00}
+.chip-bad{background:#f8d7da;color:#721c24}
+.rx-preview{background:#fff;border:1px solid var(--line);border-radius:10px;padding:22px;max-width:800px}
+.rx-preview .rx-head{display:flex;justify-content:space-between;border-bottom:3px solid var(--primary2);padding-bottom:10px;margin-bottom:14px}
+.rx-preview .brand{font-weight:800;font-size:17px;color:var(--primary2)}
+.rx-preview .rx-title{text-align:center;font-weight:800;color:var(--primary2);margin:12px 0;letter-spacing:.04em}
+.rx-preview .rx-meta{display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px;margin-bottom:12px}
+.rx-preview .rx-section{margin:12px 0}
+.rx-preview .rx-section h3{font-size:12px;text-transform:uppercase;color:var(--primary2);border-bottom:1px solid var(--line);padding-bottom:4px;margin:0 0 6px}
+.rx-preview .rx-text{white-space:pre-wrap;font-size:13px;min-height:40px}
+.rx-preview .sig-block{margin-top:28px;text-align:center;page-break-inside:avoid}
+.rx-preview .sig-wrap{position:relative;width:260px;height:100px;margin:0 auto}
+.rx-preview .sig-block .stamp-img{
+  position:absolute;left:50%;bottom:6px;transform:translateX(-50%);
+  width:190px;max-width:95%;height:auto;max-height:95px;object-fit:contain;
+  z-index:2;mix-blend-mode:multiply;pointer-events:none
+}
+.rx-preview .sig-block .sig-line{
+  position:absolute;left:0;right:0;bottom:0;
+  border-top:1px solid #222;height:0;z-index:1
+}
+.rx-preview .sig-label{margin-top:6px;font-size:11px;color:#444}
+.rx-preview .disclaimer{margin-top:16px;border-left:4px solid #d3a52e;background:#fff9e8;padding:8px;font-size:10px;color:#594b28}
+.rx-preview .legal-foot{margin-top:18px;font-size:9.5px;line-height:1.35;color:#444;text-align:justify;border-top:1px solid #ccc;padding-top:10px}
+@page{size:A4 portrait;margin:12mm}
+@media print{
+  html,body{width:210mm;height:297mm;margin:0!important;padding:0!important;background:#fff!important}
+  body *{visibility:hidden!important}
+  #printArea, #printArea *{visibility:visible!important}
+  #printArea{
+    position:absolute;left:0;top:0;width:186mm;max-width:186mm;
+    padding:0;margin:0;box-sizing:border-box;
+    background:#fff!important;border:0!important;box-shadow:none!important;border-radius:0!important
+  }
+  .no-print,.menubar,.topbar,.sidebar,.statusBar,#loginScreen,.toast{display:none!important}
+  .rx-preview .stamp-img{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .panel{box-shadow:none!important;border:0!important;background:#fff!important}
+  /* fallback: imprimir conteúdo da consulta quando não há #printArea */
+  body.print-content #content,
+  body.print-content #content *{visibility:visible!important}
+  body.print-content #content{
+    position:absolute;left:0;top:0;width:186mm;padding:0;margin:0
+  }
+  body.print-content .no-print{display:none!important}
+}
+.loginBox label{display:block;font-weight:600;margin:12px 0 5px}
+.loginBox input{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:6px}
+.loginBox .btn{margin-top:18px;width:100%;padding:11px;background:var(--primary);color:#fff;border:0;border-radius:6px;font-weight:700}
+.loginBox .btn:hover{background:var(--primary2)}
+.loginHint{margin-top:14px;font-size:12px;color:var(--muted);text-align:center}
+.gemini-log{max-height:420px;overflow:auto;background:#f7fbf8;border:1px solid var(--line);border-radius:8px;padding:12px;margin-bottom:12px}
+.gemini-msg{margin:0 0 12px;padding:10px 12px;border-radius:8px;white-space:pre-wrap;line-height:1.45}
+.gemini-msg.user{background:#e3f2e8;border:1px solid #c5dccb}
+.gemini-msg.bot{background:#fff;border:1px solid var(--line)}
+.gemini-msg .who{font-size:11px;font-weight:700;color:var(--primary2);margin-bottom:4px}
+.gemini-msg.error{background:#fdecea;border-color:#f5c2c0;color:#721c24}
+
+/* APP SHELL */
+#app{display:none;height:100vh;flex-direction:column}
+#app.on{display:flex}
+.topbar{background:linear-gradient(90deg,#1b4332 0%,#2d6a4f 45%,#52b788 100%);color:#fff;display:flex;align-items:center;gap:16px;padding:0 12px;height:46px;flex-shrink:0}
+.topbar .brand{font-weight:800;letter-spacing:.03em;font-size:16px}
+.topbar .user{margin-left:auto;font-size:12px;opacity:.9}
+.topbar button{background:transparent;border:1px solid rgba(255,255,255,.3);color:#fff;padding:4px 10px;border-radius:4px}
+.topbar button:hover{background:rgba(255,255,255,.12)}
+
+/* MENU */
+.menubar{background:var(--menu);color:#dce8f0;display:flex;flex-wrap:wrap;gap:2px;padding:0 6px;flex-shrink:0;border-bottom:1px solid #0a2030}
+.menubar .m{position:relative}
+.menubar .m>button{background:transparent;border:0;color:#dce8f0;padding:8px 12px;font-weight:600}
+.menubar .m>button:hover,.menubar .m.open>button{background:var(--menuHover)}
+.menubar .drop{display:none;position:absolute;top:100%;left:0;background:#fff;color:var(--text);min-width:220px;border:1px solid var(--line);box-shadow:0 8px 24px rgba(0,0,0,.18);z-index:50}
+.menubar .m.open .drop{display:block}
+.menubar .drop button{display:block;width:100%;text-align:left;padding:8px 14px;border:0;background:#fff;border-bottom:1px solid #eef2f5}
+.menubar .drop button:hover{background:#e8f4fa}
+.menubar .drop .sep{height:1px;background:var(--line);margin:4px 0}
+
+/* BODY */
+.main{flex:1;display:flex;overflow:hidden}
+.sidebar{width:200px;background:#f4f7fa;border-right:1px solid var(--line);padding:10px;overflow:auto;flex-shrink:0}
+.sidebar h3{margin:0 0 8px;font-size:12px;text-transform:uppercase;color:var(--muted);letter-spacing:.04em}
+.sidebar button{display:block;width:100%;text-align:left;padding:8px 10px;margin-bottom:3px;border:1px solid transparent;background:transparent;border-radius:5px}
+.sidebar button:hover,.sidebar button.active{background:#d6ebf5;border-color:#a8c8d8}
+.content{flex:1;overflow:auto;padding:16px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.panel h2{margin:0 0 12px;font-size:1.15rem;color:var(--primary2);border-bottom:2px solid #d0e4ef;padding-bottom:8px}
+.row{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:10px}
+.field{flex:1;min-width:140px}
+.field label{display:block;font-weight:600;margin-bottom:4px;color:var(--muted);font-size:12px}
+.field input,.field select,.field textarea{width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:5px}
+.field textarea{min-height:70px;resize:vertical}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.btn{padding:7px 14px;border:1px solid var(--line);border-radius:5px;background:#f5f8fa;font-weight:600}
+.btn:hover{background:#e4eef5}
+.btn-primary{background:var(--primary);color:#fff;border-color:var(--primary)}
+.btn-primary:hover{background:var(--primary2)}
+.btn-ok{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-danger{background:var(--danger);color:#fff;border-color:var(--danger)}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:left}
+th{background:#eef5f9;font-weight:700}
+tr:nth-child(even){background:#fafcfd}
+tr.clickable{cursor:pointer}
+tr.clickable:hover{background:#e3f2fa}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700}
+.badge-ok{background:#d4edda;color:var(--ok)}
+.badge-warn{background:#fff3cd;color:var(--warn)}
+.badge-bad{background:#f8d7da;color:var(--danger)}
+.stat{display:inline-block;background:#eef6fb;border:1px solid #c5dde8;border-radius:6px;padding:8px 14px;margin:4px 6px 4px 0}
+.stat b{display:block;font-size:1.2rem;color:var(--primary2)}
+.toast{position:fixed;bottom:20px;right:20px;background:#1a2a35;color:#fff;padding:12px 18px;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.3);z-index:100;opacity:0;transition:.3s}
+.toast.show{opacity:1}
+.statusBar{background:#dfe8ef;border-top:1px solid var(--line);padding:4px 12px;font-size:11px;color:var(--muted);flex-shrink:0}
+@media(max-width:800px){
+  .sidebar{display:none}
+  .menubar{font-size:12px}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="loginBox">
+    <h1>Limanet</h1>
+    <div class="sub">Sistema de Avaliação e Terapia Nutricional<br>Dr. Francisco Lima · CRN-4 26101256</div>
+    <label for="loginUser">Login do usuário</label>
+    <input id="loginUser" name="loginUser" value="" autocomplete="username" placeholder="Utilizador">
+    <label for="loginPass">Senha</label>
+    <input id="loginPass" name="loginPass" type="password" value="" autocomplete="current-password" placeholder="Senha">
+    <button class="btn" onclick="doLogin()">Entrar</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <span class="brand">Limanet</span>
+    <span style="opacity:.85;font-size:12px">CRN-4 26101256 · <span id="topoRelogio"></span></span>
+    <span class="user" id="lblUser"></span>
+    <button onclick="doLogout()">Sair</button>
+  </div>
+
+  <div class="menubar" id="menubar">
+    <div class="m" data-m="cad">
+      <button type="button">Cadastros</button>
+      <div class="drop">
+        <button type="button" data-view="pacientes">Pacientes</button>
+        <button type="button" data-view="nutricionistas">Nutricionistas</button>
+        <button type="button" data-view="alimentos">Alimentos</button>
+        <button type="button" data-view="grupos">Grupos de Alimentos</button>
+        <button type="button" data-view="patologias">Patologias</button>
+        <button type="button" data-view="alergias">Intolerâncias e Alergias</button>
+        <div class="sep"></div>
+        <button type="button" data-view="usuarios">Usuários</button>
+      </div>
+    </div>
+    <div class="m" data-m="atend">
+      <button type="button">Atendimento</button>
+      <div class="drop">
+        <button type="button" data-view="inicio">Início Rápido</button>
+        <button type="button" data-view="consulta">Nova Consulta</button>
+        <button type="button" data-view="anamnese">Anamnese</button>
+        <button type="button" data-view="antropometria">Avaliação Antropométrica</button>
+        <button type="button" data-view="energia">Cálculos Energéticos</button>
+        <button type="button" data-view="plano">Plano Alimentar</button>
+        <button type="button" data-view="equivalencias">Guia de Equivalências</button>
+        <button type="button" data-view="gestante">Cálculos Gestante</button>
+        <button type="button" data-view="exames">Exames Laboratoriais</button>
+        <button type="button" data-view="teia">Teia Metabólica / Sinais e Sintomas</button>
+        <button type="button" data-view="fitoterapia">Prescrição Fitoterápica</button>
+        <button type="button" data-view="receitaExames">Pedido de Exames</button>
+      </div>
+    </div>
+    <div class="m" data-m="agenda">
+      <button type="button">Agenda</button>
+      <div class="drop">
+        <button type="button" data-view="agenda">Meus Agendamentos</button>
+      </div>
+    </div>
+    <div class="m" data-m="rel">
+      <button type="button">Relatórios</button>
+      <div class="drop">
+        <button type="button" data-view="relatorio">Resumo do Paciente</button>
+        <button type="button" data-view="evolucao">Evolução de Peso</button>
+      </div>
+    </div>
+    <div class="m" data-m="util">
+      <button type="button">Utilitários</button>
+      <div class="drop">
+        <button type="button" data-view="backup">Backup / Restaurar</button>
+        <button type="button" data-view="gemini">Assistente Gemini</button>
+        <button type="button" data-view="config">Configurações</button>
+      </div>
+    </div>
+    <div class="m" data-m="ajuda">
+      <button type="button">Ajuda</button>
+      <div class="drop">
+        <button type="button" data-view="glossario">Glossário · Patologias e Condutas</button>
+        <button type="button" data-view="sobre">Sobre o Limanet</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+    <aside class="sidebar" id="sidebar">
+      <h3>Acesso rápido</h3>
+      <button type="button" data-view="inicio" class="active">Início Rápido</button>
+      <button type="button" data-view="pacientes">Pacientes</button>
+      <button type="button" data-view="antropometria">Antropometria</button>
+      <button type="button" data-view="energia">Cálculos Energéticos</button>
+      <button type="button" data-view="alimentos">Alimentos</button>
+      <button type="button" data-view="plano">Plano Alimentar</button>
+      <button type="button" data-view="equivalencias">Equivalências</button>
+      <button type="button" data-view="gestante">Gestante</button>
+      <button type="button" data-view="exames">Exames Lab</button>
+      <button type="button" data-view="teia">Teia Metabólica</button>
+      <button type="button" data-view="agenda">Agenda</button>
+      <button type="button" data-view="anamnese">Anamnese</button>
+      <button type="button" data-view="alergias">Alergias / Intolerâncias</button>
+      <button type="button" data-view="glossario">Glossário</button>
+      <button type="button" data-view="fitoterapia">Fitoterapia</button>
+      <button type="button" data-view="receitaExames">Pedido de Exames</button>
+      <button type="button" data-view="gemini">Assistente Gemini</button>
+    </aside>
+    <div class="content" id="content"></div>
+  </div>
+  <div class="statusBar" id="statusBar">Pronto</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ========= STORAGE ========= */
+const DB_KEY = 'limanet_v1';
+const CONTATO = {
+  nome: 'Dr. Francisco Lima',
+  crn: 'CRN-4 26101256',
+  whatsapp: '5521986807805',
+  email: '',
+  site: 'https://sites.google.com/view/dr-francisco-lima-nutri/new'
+};
+function loadDB(){
+  try{
+    const raw=localStorage.getItem(DB_KEY);
+    if(!raw) return seed();
+    const d=JSON.parse(raw);
+    if(!d.equivalencias) d.equivalencias=seed().equivalencias;
+    if(!d.exames) d.exames={};
+    if(!d.alergias) d.alergias={};
+    if(!d.teia) d.teia={};
+    if(!d.seq) d.seq={pac:3,nut:2,alim:11,grp:9,pat:6,ag:1,equiv:9};
+    if(!d.seq.equiv) d.seq.equiv=9;
+    // sempre mantém identidade profissional
+    d.user.nome = CONTATO.nome;
+    d.user.crn = CONTATO.crn;
+    return d;
+  }catch(e){ return seed(); }
+}
+function saveDB(){ localStorage.setItem(DB_KEY, JSON.stringify(DB)); }
+function seed(){
+  return {
+    user: {login:'admin', nome:CONTATO.nome, crn:CONTATO.crn},
+    pacientes: [
+      {id:1, nome:'Maria Silva', nasc:'1978-05-12', sexo:'F', tel:'(21) 99999-0001', email:'maria@email.com', peso:68, altura:1.62, obs:''},
+      {id:2, nome:'João Santos', nasc:'1965-11-03', sexo:'M', tel:'(21) 98888-0002', email:'joao@email.com', peso:82, altura:1.75, obs:''}
+    ],
+    nutricionistas: [
+      {id:1, nome:CONTATO.nome, crn:CONTATO.crn, tel:'21986807805'}
+    ],
+    alergias: {},
+    teia: {},
+    grupos: [
+      {id:1, nome:'Cereais e derivados'},
+      {id:2, nome:'Hortaliças'},
+      {id:3, nome:'Frutas'},
+      {id:4, nome:'Leguminosas'},
+      {id:5, nome:'Carnes e ovos'},
+      {id:6, nome:'Leite e derivados'},
+      {id:7, nome:'Óleos e gorduras'},
+      {id:8, nome:'Açúcares e doces'}
+    ],
+    alimentos: [
+      {id:1, nome:'Arroz branco cozido', grupo:1, medida:'colher de sopa', gramas:25, kcal:32, prot:0.6, lip:0.1, carb:7.0, fib:0.3},
+      {id:2, nome:'Feijão preto cozido', grupo:4, medida:'concha', gramas:100, kcal:77, prot:4.5, lip:0.5, carb:14, fib:8.4},
+      {id:3, nome:'Peito de frango grelhado', grupo:5, medida:'filé médio', gramas:100, kcal:159, prot:32, lip:2.5, carb:0, fib:0},
+      {id:4, nome:'Banana prata', grupo:3, medida:'unidade média', gramas:65, kcal:64, prot:0.8, lip:0.1, carb:17, fib:1.3},
+      {id:5, nome:'Leite integral', grupo:6, medida:'copo 200ml', gramas:200, kcal:117, prot:6.2, lip:6.2, carb:9.2, fib:0},
+      {id:6, nome:'Pão francês', grupo:1, medida:'unidade 50g', gramas:50, kcal:150, prot:4.0, lip:1.5, carb:29, fib:1.5},
+      {id:7, nome:'Ovo cozido', grupo:5, medida:'unidade', gramas:50, kcal:73, prot:6.5, lip:5.0, carb:0.3, fib:0},
+      {id:8, nome:'Alface crespa', grupo:2, medida:'folha', gramas:10, kcal:1, prot:0.1, lip:0, carb:0.2, fib:0.2},
+      {id:9, nome:'Azeite de oliva', grupo:7, medida:'colher de sopa', gramas:8, kcal:72, prot:0, lip:8, carb:0, fib:0},
+      {id:10, nome:'Maçã com casca', grupo:3, medida:'unidade média', gramas:130, kcal:73, prot:0.4, lip:0.3, carb:19, fib:2.0}
+    ],
+    patologias: [
+      {id:1, nome:'Diabetes mellitus tipo 2'},
+      {id:2, nome:'Hipertensão arterial'},
+      {id:3, nome:'Dislipidemia'},
+      {id:4, nome:'Obesidade'},
+      {id:5, nome:'Desnutrição'}
+    ],
+    agenda: [],
+    planos: {},
+    anamneses: {},
+    exames: {},
+    equivalencias: [
+      {id:1, grupo:'Cereais / pães', porcao:'1 fatia pão francês (50g)', kcal:150, exemplos:'1 fatia pão forma · 3 col. arroz cozido · ½ xícara macarrão · 4 biscoitos água e sal'},
+      {id:2, grupo:'Frutas', porcao:'1 unidade média', kcal:70, exemplos:'1 banana · 1 maçã · 1 laranja · 1 fatia mamão · 1 xícara morango'},
+      {id:3, grupo:'Hortaliças A (folhosas)', porcao:'1 prato raso cru', kcal:15, exemplos:'alface · rúcula · agrião · repolho · pepino'},
+      {id:4, grupo:'Hortaliças B (legumes)', porcao:'2 col. sopa cozidas', kcal:30, exemplos:'cenoura · abobrinha · berinjela · vagem · beterraba'},
+      {id:5, grupo:'Leguminosas', porcao:'1 concha feijão', kcal:80, exemplos:'feijão · lentilha · grão-de-bico · ervilha seca'},
+      {id:6, grupo:'Carnes e ovos', porcao:'1 filé médio / 1 ovo', kcal:150, exemplos:'peito frango 100g · carne magra 80g · 1 ovo · 1 filé peixe'},
+      {id:7, grupo:'Leite e derivados', porcao:'1 copo 200ml', kcal:120, exemplos:'leite · 1 iogurte natural · 1 fatia queijo branco · 2 col. ricota'},
+      {id:8, grupo:'Gorduras', porcao:'1 col. sopa', kcal:70, exemplos:'azeite · óleo · manteiga · margarina · 1/4 abacate'}
+    ],
+    seq: {pac:3, nut:2, alim:11, grp:9, pat:6, ag:1, equiv:9}
+  };
+}
+let DB = loadDB();
+let currentView = 'inicio';
+let selectedPacienteId = null;
+
+/* ========= UI HELPERS ========= */
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2800);
+}
+function status(msg){ document.getElementById('statusBar').textContent = msg; }
+function ageFrom(nasc){
+  if(!nasc) return '—';
+  const d=new Date(nasc+'T00:00:00'); const n=new Date();
+  let a=n.getFullYear()-d.getFullYear();
+  const m=n.getMonth()-d.getMonth();
+  if(m<0||(m===0&&n.getDate()<d.getDate())) a--;
+  return a;
+}
+function imc(peso, altura){
+  if(!peso||!altura||altura<=0) return null;
+  return peso/(altura*altura);
+}
+function classIMC(v){
+  if(v==null) return {t:'—', c:''};
+  if(v<18.5) return {t:'Baixo peso', c:'badge-warn'};
+  if(v<25) return {t:'Eutrófico', c:'badge-ok'};
+  if(v<30) return {t:'Sobrepeso', c:'badge-warn'};
+  return {t:'Obesidade', c:'badge-bad'};
+}
+function pesoIdeal(sexo, altura){
+  // fórmula simplificada (Devine)
+  if(!altura) return null;
+  const pol = altura * 39.3701;
+  if(sexo==='M') return 50 + 2.3*(pol-60);
+  return 45.5 + 2.3*(pol-60);
+}
+function tmbMifflin(sexo, peso, alturaCm, idade){
+  if(sexo==='M') return 10*peso + 6.25*alturaCm - 5*idade + 5;
+  return 10*peso + 6.25*alturaCm - 5*idade - 161;
+}
+/** Harris-Benedict original (1919) */
+function tmbHarris1919(sexo, peso, alturaCm, idade){
+  if(sexo==='M') return 66.473 + 13.7516*peso + 5.0033*alturaCm - 6.755*idade;
+  return 655.0955 + 9.5634*peso + 1.8496*alturaCm - 4.6756*idade;
+}
+/** Harris-Benedict revisada (Roza & Shizgal 1984) — a mais usada clinicamente como "HB atualizada" */
+function tmbHarris1984(sexo, peso, alturaCm, idade){
+  if(sexo==='M') return 88.362 + 13.397*peso + 4.799*alturaCm - 5.677*idade;
+  return 447.593 + 9.247*peso + 3.098*alturaCm - 4.330*idade;
+}
+function esc(s){ return String(s??'').replace(/[&<>"']/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
+
+/* ========= LOGIN ========= */
+/* URL da API no Render — altere após o deploy */
+const LIMANET_API = (window.LIMANET_API_URL || 'https://limanet-api.onrender.com').replace(/\/$/, '');
+
+async function doLogin(){
+  const user = (document.getElementById('loginUser').value || '').trim();
+  const pass = (document.getElementById('loginPass').value || '').trim();
+  if (!user || !pass) { toast('Informe utilizador e senha'); return; }
+
+  const btn = document.querySelector('#loginScreen .btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'A entrar…'; }
+
+  try {
+    const r = await fetch(LIMANET_API + '/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user, pass })
+    });
+    let data = {};
+    try { data = await r.json(); } catch (_) {}
+    if (!r.ok || !data.ok) {
+      toast((data && data.msg) || 'Utilizador ou senha inválidos');
+      return;
+    }
+    sessionStorage.setItem('limanet_token', data.token);
+    sessionStorage.setItem('limanet_nome', data.nome || '');
+    sessionStorage.setItem('limanet_crn', data.crn || '');
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('app').classList.add('on');
+    document.getElementById('lblUser').textContent = (data.nome || DB.user.nome) + ' · ' + (data.crn || DB.user.crn || '');
+    showView('inicio');
+    toast('Login realizado com sucesso!');
+  } catch (e) {
+    toast('Sem ligação ao servidor de login (Render). Verifique a URL LIMANET_API.');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Entrar'; }
+  }
+}
+function doLogout(){
+  sessionStorage.removeItem('limanet_token');
+  sessionStorage.removeItem('limanet_nome');
+  sessionStorage.removeItem('limanet_crn');
+  document.getElementById('app').classList.remove('on');
+  document.getElementById('loginScreen').classList.remove('hidden');
+}
+
+/* ========= MENU ========= */
+document.getElementById('menubar').addEventListener('click', e=>{
+  const btn=e.target.closest('button');
+  if(!btn) return;
+  const m=btn.closest('.m');
+  if(btn.parentElement===m){
+    document.querySelectorAll('.menubar .m').forEach(x=>{ if(x!==m) x.classList.remove('open'); });
+    m.classList.toggle('open');
+    return;
+  }
+  const view=btn.getAttribute('data-view');
+  if(view){ showView(view); document.querySelectorAll('.menubar .m').forEach(x=>x.classList.remove('open')); }
+});
+document.addEventListener('click', e=>{
+  if(!e.target.closest('.menubar')) document.querySelectorAll('.menubar .m').forEach(x=>x.classList.remove('open'));
+});
+document.getElementById('sidebar').addEventListener('click', e=>{
+  const btn=e.target.closest('button[data-view]');
+  if(btn) showView(btn.getAttribute('data-view'));
+});
+
+function showView(name){
+  currentView=name;
+  document.querySelectorAll('.sidebar button').forEach(b=>{
+    b.classList.toggle('active', b.getAttribute('data-view')===name);
+  });
+  const c=document.getElementById('content');
+  const map={
+    inicio: viewInicio,
+    pacientes: viewPacientes,
+    nutricionistas: viewNutricionistas,
+    alimentos: viewAlimentos,
+    grupos: viewGrupos,
+    patologias: viewPatologias,
+    alergias: viewAlergias,
+    teia: viewTeia,
+    usuarios: viewUsuarios,
+    consulta: viewConsulta,
+    anamnese: viewAnamnese,
+    antropometria: viewAntropometria,
+    energia: viewEnergia,
+    plano: viewPlano,
+    equivalencias: viewEquivalencias,
+    gestante: viewGestante,
+    exames: viewExames,
+    agenda: viewAgenda,
+    relatorio: viewRelatorio,
+    evolucao: viewEvolucao,
+    backup: viewBackup,
+    config: viewConfig,
+    glossario: viewGlossario,
+    fitoterapia: viewFitoterapia,
+    receitaExames: viewReceitaExames,
+    gemini: viewGemini,
+    sobre: viewSobre
+  };
+  (map[name]||viewInicio)(c);
+  status('Módulo: '+name);
+}
+
+/* ========= VIEWS ========= */
+function viewInicio(c){
+  c.innerHTML=`
+  <div class="panel">
+    <h2>Início Rápido</h2>
+    <p>Bem-vindo ao <b>Limanet</b>. Selecione um paciente e inicie o atendimento.</p>
+    <div class="row">
+      <div class="field"><label>Paciente</label>
+        <select id="selPacHome">${pacOptions()}</select>
+      </div>
+    </div>
+    <div class="btns">
+      <button class="btn btn-primary" onclick="selectedPacienteId=+$('#selPacHome').value;showView('antropometria')">Avaliação Antropométrica</button>
+      <button class="btn" onclick="selectedPacienteId=+$('#selPacHome').value;showView('energia')">Cálculos Energéticos</button>
+      <button class="btn" onclick="selectedPacienteId=+$('#selPacHome').value;showView('plano')">Plano Alimentar</button>
+      <button class="btn" onclick="selectedPacienteId=+$('#selPacHome').value;showView('gestante')">Gestante</button>
+      <button class="btn" onclick="selectedPacienteId=+$('#selPacHome').value;showView('exames')">Exames Lab</button>
+      <button class="btn" onclick="showView('equivalencias')">Equivalências</button>
+      <button class="btn" onclick="selectedPacienteId=+$('#selPacHome').value;showView('fitoterapia')">Prescrição Fitoterápica</button>
+      <button class="btn" onclick="selectedPacienteId=+$('#selPacHome').value;showView('receitaExames')">Pedido de Exames</button>
+      <button class="btn" onclick="selectedPacienteId=+$('#selPacHome').value;showView('anamnese')">Anamnese</button>
+      <button class="btn" onclick="showView('pacientes')">Cadastro de Pacientes</button>
+    </div>
+    <div style="margin-top:16px">
+      <span class="stat"><b>${DB.pacientes.length}</b>Pacientes</span>
+      <span class="stat"><b>${DB.alimentos.length}</b>Alimentos</span>
+      <span class="stat"><b>${DB.agenda.length}</b>Agendamentos</span>
+    </div>
+  </div>`;
+}
+function $(sel){ return document.querySelector(sel); }
+function imprimirA4(){
+  /* Prefer dedicated print region when present */
+  const hasPrint=document.getElementById('printArea');
+  if(hasPrint){
+    document.body.classList.remove('print-content');
+  } else {
+    document.body.classList.add('print-content');
+  }
+  window.print();
+  setTimeout(()=>document.body.classList.remove('print-content'),500);
+}
+function pacOptions(selId){
+  const id=selId??selectedPacienteId;
+  return DB.pacientes.map(p=>`<option value="${p.id}" ${p.id==id?'selected':''}>${esc(p.nome)} (${ageFrom(p.nasc)} a)</option>`).join('');
+}
+
+function viewPacientes(c){
+  c.innerHTML=`
+  <div class="panel">
+    <h2>Cadastro de Pacientes</h2>
+    <div class="row">
+      <div class="field"><label>Nome</label><input id="pNome"></div>
+      <div class="field" style="max-width:140px"><label>Nascimento</label><input id="pNasc" type="date"></div>
+      <div class="field" style="max-width:100px"><label>Sexo</label>
+        <select id="pSexo"><option value="F">F</option><option value="M">M</option></select>
+      </div>
+      <div class="field" style="max-width:120px"><label>Peso (kg)</label><input id="pPeso" type="number" step="0.1"></div>
+      <div class="field" style="max-width:120px"><label>Altura (m)</label><input id="pAltura" type="number" step="0.01"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Telefone</label><input id="pTel"></div>
+      <div class="field"><label>E-mail</label><input id="pEmail"></div>
+      <div class="field"><label>Observações</label><input id="pObs"></div>
+    </div>
+    <div class="btns">
+      <button class="btn btn-primary" onclick="salvarPaciente()">Incluir / Atualizar</button>
+      <button class="btn btn-danger" onclick="excluirPaciente()">Excluir</button>
+      <button class="btn" onclick="limparPaciente()">Limpar</button>
+    </div>
+    <input type="hidden" id="pId" value="">
+  </div>
+  <div class="panel">
+    <h2>Pacientes cadastrados</h2>
+    <table>
+      <thead><tr><th>Código</th><th>Nome</th><th>Idade</th><th>Sexo</th><th>Peso</th><th>Altura</th><th>IMC</th><th>Telefone</th></tr></thead>
+      <tbody>
+        ${DB.pacientes.map(p=>{
+          const v=imc(p.peso,p.altura); const cl=classIMC(v);
+          return `<tr class="clickable" onclick="editarPaciente(${p.id})">
+            <td>${p.id}</td><td>${esc(p.nome)}</td><td>${ageFrom(p.nasc)}</td><td>${p.sexo}</td>
+            <td>${p.peso??'—'}</td><td>${p.altura??'—'}</td>
+            <td>${v?v.toFixed(1):'—'} <span class="badge ${cl.c}">${cl.t}</span></td>
+            <td>${esc(p.tel)}</td></tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+  </div>`;
+}
+function limparPaciente(){
+  ['pId','pNome','pNasc','pPeso','pAltura','pTel','pEmail','pObs'].forEach(id=>{const e=document.getElementById(id); if(e) e.value='';});
+  document.getElementById('pSexo').value='F';
+}
+function editarPaciente(id){
+  const p=DB.pacientes.find(x=>x.id===id); if(!p) return;
+  selectedPacienteId=id;
+  document.getElementById('pId').value=p.id;
+  document.getElementById('pNome').value=p.nome;
+  document.getElementById('pNasc').value=p.nasc||'';
+  document.getElementById('pSexo').value=p.sexo||'F';
+  document.getElementById('pPeso').value=p.peso??'';
+  document.getElementById('pAltura').value=p.altura??'';
+  document.getElementById('pTel').value=p.tel||'';
+  document.getElementById('pEmail').value=p.email||'';
+  document.getElementById('pObs').value=p.obs||'';
+  toast('Paciente carregado para edição');
+}
+function salvarPaciente(){
+  const nome=document.getElementById('pNome').value.trim();
+  if(!nome){ toast('Informe o paciente!'); return; }
+  const id=document.getElementById('pId').value;
+  const data={
+    nome, nasc:document.getElementById('pNasc').value,
+    sexo:document.getElementById('pSexo').value,
+    peso:parseFloat(document.getElementById('pPeso').value)||null,
+    altura:parseFloat(document.getElementById('pAltura').value)||null,
+    tel:document.getElementById('pTel').value,
+    email:document.getElementById('pEmail').value,
+    obs:document.getElementById('pObs').value
+  };
+  if(id){
+    const p=DB.pacientes.find(x=>x.id==id);
+    Object.assign(p, data);
+    toast('Paciente atualizado!');
+  } else {
+    data.id=DB.seq.pac++;
+    DB.pacientes.push(data);
+    toast('Paciente incluído!');
+  }
+  saveDB(); showView('pacientes');
+}
+function excluirPaciente(){
+  const id=document.getElementById('pId').value;
+  if(!id){ toast('Selecione um paciente na lista'); return; }
+  if(!confirm('Confirma a exclusão do paciente?')) return;
+  DB.pacientes=DB.pacientes.filter(x=>x.id!=id);
+  saveDB(); toast('Paciente excluído'); showView('pacientes');
+}
+
+function viewNutricionistas(c){
+  c.innerHTML=`<div class="panel"><h2>Nutricionistas</h2>
+  <table><thead><tr><th>Código</th><th>Nome</th><th>CRN</th><th>Telefone</th></tr></thead>
+  <tbody>${DB.nutricionistas.map(n=>`<tr><td>${n.id}</td><td>${esc(n.nome)}</td><td>${esc(n.crn)}</td><td>${esc(n.tel)}</td></tr>`).join('')}</tbody></table></div>`;
+}
+
+function viewAlimentos(c){
+  c.innerHTML=`
+  <div class="panel">
+    <h2>Tabela de Alimentos</h2>
+    <div class="row">
+      <div class="field"><label>Buscar</label><input id="alimBusca" placeholder="Nome do alimento..." autocomplete="off"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Nome</label><input id="aNome"></div>
+      <div class="field"><label>Grupo</label>
+        <select id="aGrupo">${DB.grupos.map(g=>`<option value="${g.id}">${esc(g.nome)}</option>`).join('')}</select>
+      </div>
+      <div class="field"><label>Medida caseira</label><input id="aMedida" placeholder="ex: colher de sopa"></div>
+      <div class="field" style="max-width:100px"><label>Gramas</label><input id="aGramas" type="number" step="0.1"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>kcal</label><input id="aKcal" type="number" step="0.1"></div>
+      <div class="field"><label>Proteína (g)</label><input id="aProt" type="number" step="0.1"></div>
+      <div class="field"><label>Lipídeos (g)</label><input id="aLip" type="number" step="0.1"></div>
+      <div class="field"><label>Carboidrato (g)</label><input id="aCarb" type="number" step="0.1"></div>
+      <div class="field"><label>Fibra (g)</label><input id="aFib" type="number" step="0.1"></div>
+    </div>
+    <div class="btns">
+      <button class="btn btn-primary" onclick="salvarAlimento()">Incluir alimento</button>
+    </div>
+  </div>
+  <div class="panel">
+    <table>
+      <thead><tr><th>Código</th><th>Alimento</th><th>Grupo</th><th>Medida</th><th>g</th><th>kcal</th><th>Prot</th><th>Lip</th><th>Carb</th><th>Fib</th><th></th></tr></thead>
+      <tbody id="alimTbody"></tbody>
+    </table>
+  </div>`;
+  const inp=document.getElementById('alimBusca');
+  const render=()=>{
+    const q=(inp.value||'').toLowerCase().trim();
+    document.getElementById('alimTbody').innerHTML=DB.alimentos
+      .filter(a=>!q||a.nome.toLowerCase().includes(q))
+      .map(a=>{
+        const g=DB.grupos.find(x=>x.id===a.grupo);
+        return `<tr><td>${a.id}</td><td>${esc(a.nome)}</td><td>${esc(g?g.nome:'')}</td><td>${esc(a.medida)}</td>
+          <td>${a.gramas}</td><td>${a.kcal}</td><td>${a.prot}</td><td>${a.lip}</td><td>${a.carb}</td><td>${a.fib}</td>
+          <td><button type="button" class="btn" onclick="excluirAlimento(${a.id})">Excluir</button></td></tr>`;
+      }).join('')||'<tr><td colspan="10">Nenhum alimento encontrado</td></tr>';
+  };
+  inp.addEventListener('input', render);
+  render();
+}
+function excluirAlimento(id){
+  if(!confirm('Excluir este alimento da tabela?')) return;
+  DB.alimentos=DB.alimentos.filter(a=>a.id!==id);
+  saveDB(); toast('Alimento excluído'); showView('alimentos');
+}
+function salvarAlimento(){
+  const nome=document.getElementById('aNome').value.trim();
+  if(!nome){ toast('Informe o nome do alimento!'); return; }
+  DB.alimentos.push({
+    id:DB.seq.alim++, nome,
+    grupo:+document.getElementById('aGrupo').value,
+    medida:document.getElementById('aMedida').value,
+    gramas:parseFloat(document.getElementById('aGramas').value)||0,
+    kcal:parseFloat(document.getElementById('aKcal').value)||0,
+    prot:parseFloat(document.getElementById('aProt').value)||0,
+    lip:parseFloat(document.getElementById('aLip').value)||0,
+    carb:parseFloat(document.getElementById('aCarb').value)||0,
+    fib:parseFloat(document.getElementById('aFib').value)||0
+  });
+  saveDB(); toast('Alimento incluído!'); showView('alimentos');
+}
+
+function viewGrupos(c){
+  c.innerHTML=`<div class="panel"><h2>Grupos de Alimentos</h2>
+  <table><thead><tr><th>Código</th><th>Nome do grupo</th></tr></thead>
+  <tbody>${DB.grupos.map(g=>`<tr><td>${g.id}</td><td>${esc(g.nome)}</td></tr>`).join('')}</tbody></table></div>`;
+}
+function viewPatologias(c){
+  c.innerHTML=`<div class="panel"><h2>Patologias</h2>
+  <table><thead><tr><th>Código</th><th>Patologia</th></tr></thead>
+  <tbody>${DB.patologias.map(p=>`<tr><td>${p.id}</td><td>${esc(p.nome)}</td></tr>`).join('')}</tbody></table></div>`;
+}
+
+const ALERGENOS_COMUNS = ['Leite / lactose','Ovo','Amendoim','Castanhas / nozes','Soja','Trigo / glúten','Peixe','Frutos do mar','Milho','Corantes','Conservantes','Frutose','Sacarose','Outro'];
+function viewAlergias(c){
+  if(!DB.alergias) DB.alergias={};
+  const pac=DB.pacientes.find(p=>p.id===(selectedPacienteId||DB.pacientes[0]?.id));
+  const key=pac?String(pac.id):'';
+  const dados=DB.alergias[key]||{alergias:[], intolerancias:[], obs:''};
+  const chk=(lista,id)=>lista.includes(id)?'checked':'';
+  c.innerHTML=`
+  <div class="panel">
+    <h2>Intolerâncias e Alergias Alimentares</h2>
+    <div class="row">
+      <div class="field"><label>Paciente</label>
+        <select id="alPac" onchange="selectedPacienteId=+this.value;showView('alergias')">${pacOptions(pac&&pac.id)}</select>
+      </div>
+    </div>
+    <h3 style="margin:12px 0 8px;font-size:13px;color:var(--primary2)">Alergias alimentares</h3>
+    <div class="row" id="boxAlergias">
+      ${ALERGENOS_COMUNS.map((n,i)=>`<label style="display:flex;align-items:center;gap:6px;min-width:180px;margin:4px 0">
+        <input type="checkbox" class="ckAlergia" value="${esc(n)}" ${chk(dados.alergias,n)}> ${esc(n)}
+      </label>`).join('')}
+    </div>
+    <h3 style="margin:16px 0 8px;font-size:13px;color:var(--primary2)">Intolerâncias</h3>
+    <div class="row">
+      ${['Lactose','Glúten (não alérgica)','Frutose','Sacarose','Histamina','FODMAPs','Outra'].map(n=>`
+        <label style="display:flex;align-items:center;gap:6px;min-width:180px;margin:4px 0">
+          <input type="checkbox" class="ckIntol" value="${esc(n)}" ${chk(dados.intolerancias,n)}> ${esc(n)}
+        </label>`).join('')}
+    </div>
+    <div class="field" style="margin-top:12px"><label>Observações / reações descritas</label>
+      <textarea id="alObs">${esc(dados.obs||'')}</textarea>
+    </div>
+    <div class="btns">
+      <button class="btn btn-primary" onclick="salvarAlergias()">Salvar</button>
+    </div>
+  </div>
+  <div class="panel">
+    <h2>Resumo por paciente</h2>
+    <table>
+      <thead><tr><th>Paciente</th><th>Alergias</th><th>Intolerâncias</th></tr></thead>
+      <tbody>
+        ${DB.pacientes.map(p=>{
+          const a=DB.alergias[String(p.id)]||{alergias:[],intolerancias:[]};
+          return `<tr class="clickable" onclick="selectedPacienteId=${p.id};showView('alergias')">
+            <td>${esc(p.nome)}</td>
+            <td>${a.alergias.length?esc(a.alergias.join(', ')):'—'}</td>
+            <td>${a.intolerancias.length?esc(a.intolerancias.join(', ')):'—'}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+  </div>`;
+}
+function salvarAlergias(){
+  const id=$('#alPac').value;
+  if(!id){ toast('Informe o paciente!'); return; }
+  const alergias=[...document.querySelectorAll('.ckAlergia:checked')].map(x=>x.value);
+  const intolerancias=[...document.querySelectorAll('.ckIntol:checked')].map(x=>x.value);
+  DB.alergias[id]={ alergias, intolerancias, obs:$('#alObs').value };
+  saveDB(); toast('Alergias e intolerâncias salvas!'); showView('alergias');
+}
+
+function viewUsuarios(c){
+  c.innerHTML=`<div class="panel"><h2>Usuários do sistema</h2>
+  <p>Nome: ${esc(DB.user.nome)} · CRN: ${esc(DB.user.crn)}</p>
+  <p class="muted">Clone demo — autenticação local simplificada.</p></div>`;
+}
+
+function viewConsulta(c){
+  c.innerHTML=`
+  <div class="panel">
+    <h2>Nova Consulta Nutricional</h2>
+    <div class="row">
+      <div class="field"><label>Paciente</label><select id="cPac">${pacOptions()}</select></div>
+      <div class="field"><label>Data</label><input id="cData" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+    </div>
+    <p>Selecione o paciente e use os módulos de Antropometria, Energia, Anamnese e Plano Alimentar.</p>
+    <div class="btns">
+      <button class="btn btn-primary" onclick="selectedPacienteId=+$('#cPac').value;showView('antropometria')">Ir para Antropometria</button>
+      <button class="btn" onclick="selectedPacienteId=+$('#cPac').value;showView('anamnese')">Anamnese</button>
+      <button class="btn" onclick="selectedPacienteId=+$('#cPac').value;showView('plano')">Montar Plano</button>
+    </div>
+  </div>`;
+}
+
+function viewAnamnese(c){
+  const pac=DB.pacientes.find(p=>p.id===(selectedPacienteId||DB.pacientes[0]?.id));
+  const key=pac?pac.id:null;
+  const an=key&&DB.anamneses[key]?DB.anamneses[key]:{queixa:'',historia:'',recordatorio:'',habitos:'',obs:''};
+  c.innerHTML=`
+  <div class="panel">
+    <h2>Anamnese Nutricional</h2>
+    <div class="row">
+      <div class="field"><label>Paciente</label>
+        <select id="anPac" onchange="selectedPacienteId=+this.value;showView('anamnese')">${pacOptions(pac&&pac.id)}</select>
+      </div>
+    </div>
+    <div class="field"><label>Queixa principal</label><textarea id="anQueixa">${esc(an.queixa)}</textarea></div>
+    <div class="field"><label>História da doença atual / antecedentes</label><textarea id="anHist">${esc(an.historia)}</textarea></div>
+    <div class="field"><label>Recordatório alimentar (24h)</label><textarea id="anRec">${esc(an.recordatorio)}</textarea></div>
+    <div class="field"><label>Hábitos alimentares e de vida</label><textarea id="anHab">${esc(an.habitos)}</textarea></div>
+    <div class="field"><label>Observações</label><textarea id="anObs">${esc(an.obs)}</textarea></div>
+    <div class="btns">
+      <button class="btn btn-primary" onclick="salvarAnamnese()">Salvar anamnese</button>
+    </div>
+  </div>`;
+}
+function salvarAnamnese(){
+  const id=+$('#anPac').value;
+  if(!id){ toast('Informe o paciente!'); return; }
+  DB.anamneses[id]={
+    queixa:$('#anQueixa').value, historia:$('#anHist').value,
+    recordatorio:$('#anRec').value, habitos:$('#anHab').value, obs:$('#anObs').value
+  };
+  saveDB(); toast('Anamnese registrada com sucesso!');
+}
+
+function viewAntropometria(c){
+  const pac=DB.pacientes.find(p=>p.id===(selectedPacienteId||DB.pacientes[0]?.id));
+  c.innerHTML=`
+  <div class="panel">
+    <h2>Avaliação Antropométrica</h2>
+    <div class="row">
+      <div class="field"><label>Paciente</label>
+        <select id="antPac" onchange="selectedPacienteId=+this.value;showView('antropometria')">${pacOptions(pac&&pac.id)}</select>
+      </div>
+      <div class="field"><label>Peso atual (kg)</label><input id="antPeso" type="number" step="0.1" value="${pac&&pac.peso!=null?pac.peso:''}"></div>
+      <div class="field"><label>Altura (m)</label><input id="antAlt" type="number" step="0.01" value="${pac&&pac.altura!=null?pac.altura:''}"></div>
+      <div class="field"><label>Circ. cintura (cm)</label><input id="antCint" type="number" step="0.1"></div>
+      <div class="field"><label>Circ. quadril (cm)</label><input id="antQuad" type="number" step="0.1"></div>
+    </div>
+    <div class="btns">
+      <button class="btn btn-primary" onclick="calcAntropometria()">Calcular</button>
+      <button class="btn btn-ok" onclick="salvarAntropometria()">Salvar no paciente</button>
+    </div>
+    <div id="antResult" style="margin-top:14px"></div>
+  </div>`;
+}
+function calcAntropometria(){
+  const pac=DB.pacientes.find(p=>p.id==+$('#antPac').value);
+  const peso=parseFloat($('#antPeso').value);
+  const alt=parseFloat($('#antAlt').value);
+  const cint=parseFloat($('#antCint').value);
+  const quad=parseFloat($('#antQuad').value);
+  const v=imc(peso,alt);
+  const cl=classIMC(v);
+  const idade=ageFrom(pac&&pac.nasc);
+  const pi=pesoIdeal(pac&&pac.sexo, alt);
+  let rcq='—';
+  if(cint&&quad&&quad>0) rcq=(cint/quad).toFixed(2);
+  $('#antResult').innerHTML=`
+    <span class="stat"><b>${v?v.toFixed(1):'—'}</b>IMC <span class="badge ${cl.c}">${cl.t}</span></span>
+    <span class="stat"><b>${pi?pi.toFixed(1)+' kg':'—'}</b>Peso ideal (est.)</span>
+    <span class="stat"><b>${rcq}</b>RCQ</span>
+    <span class="stat"><b>${idade}</b>Idade (anos)</span>
+    <p style="margin-top:10px;color:var(--muted)">Classificação IMC (OMS adultos): &lt;18,5 baixo peso · 18,5–24,9 eutrófico · 25–29,9 sobrepeso · ≥30 obesidade.</p>`;
+}
+function salvarAntropometria(){
+  const p=DB.pacientes.find(x=>x.id==+$('#antPac').value);
+  if(!p){ toast('Informe o paciente!'); return; }
+  p.peso=parseFloat($('#antPeso').value)||p.peso;
+  p.altura=parseFloat($('#antAlt').value)||p.altura;
+  saveDB(); toast('Dados antropométricos salvos!'); calcAntropometria();
+}
+
+function viewEnergia(c){
+  const pac=DB.pacientes.find(p=>p.id===(selectedPacienteId||DB.pacientes[0]?.id));
+  c.innerHTML=`
+  <div class="panel">
+    <h2>Cálculos Energéticos (TMB / GET)</h2>
+    <div class="row">
+      <div class="field"><label>Paciente</label>
+        <select id="enPac" onchange="selectedPacienteId=+this.value;showView('energia')">${pacOptions(pac&&pac.id)}</select>
+      </div>
+      <div class="field"><label>Peso (kg)</label><input id="enPeso" type="number" step="0.1" value="${pac&&pac.peso!=null?pac.peso:''}"></div>
+      <div class="field"><label>Altura (m)</label><input id="enAlt" type="number" step="0.01" value="${pac&&pac.altura!=null?pac.altura:''}"></div>
+      <div class="field"><label>Fator atividade</label>
+        <select id="enFat">
+          <option value="1.2">Sedentário (1.2)</option>
+          <option value="1.375">Leve (1.375)</option>
+          <option value="1.55" selected>Moderado (1.55)</option>
+          <option value="1.725">Intenso (1.725)</option>
+          <option value="1.9">Muito intenso (1.9)</option>
+        </select>
+      </div>
+      <div class="field" style="max-width:140px"><label>% Gordura (Katch-McArdle)</label><input id="enPctG" type="number" step="0.1" min="0" max="70" placeholder="ex: 22"></div>
+    </div>
+    <div class="btns">
+      <button type="button" class="btn btn-primary" onclick="calcEnergia()">Calcular TMB e GET</button>
+    </div>
+    <div id="enResult" style="margin-top:14px"></div>
+  </div>`;
+}
+function calcEnergia(){
+  const pac=DB.pacientes.find(p=>p.id==+$('#enPac').value);
+  const peso=parseFloat($('#enPeso').value);
+  const alt=parseFloat($('#enAlt').value);
+  const fat=parseFloat($('#enFat').value);
+  const pctG=parseFloat(($('#enPctG')||{}).value);
+  if(!pac||!peso||!alt){ toast('Informe peso e altura!'); return; }
+  const idade=ageFrom(pac.nasc); if(typeof idade!=='number'){ toast('Informe nascimento do paciente'); return; }
+  const h=alt*100;
+  const tmbM=tmbMifflin(pac.sexo, peso, h, idade);
+  const tmbHB84=tmbHarris1984(pac.sexo, peso, h, idade);
+  let tmbKM=null, getKM=null, lbm=null;
+  if(!isNaN(pctG) && pctG>=0 && pctG<70){
+    lbm=peso*(1-pctG/100);
+    tmbKM=370+21.6*lbm; // Katch-McArdle
+    getKM=tmbKM*fat;
+  }
+  const getM=tmbM*fat, getHB84=tmbHB84*fat;
+  const protMin=peso*0.8, protMax=peso*1.2;
+  const agua=peso*35;
+  const sexoLbl=pac.sexo==='M'?'Masculino':'Feminino';
+  $('#enResult').innerHTML=`
+    <p style="margin:0 0 8px"><b>Sexo:</b> ${sexoLbl} · <b>Idade:</b> ${idade} a · <b>Fator:</b> ${fat}</p>
+    <table style="margin-bottom:12px">
+      <thead><tr><th>Fórmula</th><th>TMB (kcal)</th><th>GET (kcal)</th></tr></thead>
+      <tbody>
+        <tr><td>Mifflin-St Jeor (1990)</td><td><b>${Math.round(tmbM)}</b></td><td><b>${Math.round(getM)}</b></td></tr>
+        <tr><td>Harris-Benedict revisada (Roza 1984)</td><td><b>${Math.round(tmbHB84)}</b></td><td><b>${Math.round(getHB84)}</b></td></tr>
+        <tr><td>Katch-McArdle ${tmbKM?`(MLG ${lbm.toFixed(1)} kg)`:'(% gordura não informado)'}</td>
+          <td>${tmbKM?`<b>${Math.round(tmbKM)}</b>`:'—'}</td>
+          <td>${getKM?`<b>${Math.round(getKM)}</b>`:'—'}</td></tr>
+      </tbody>
+    </table>
+    <span class="stat"><b>${protMin.toFixed(0)}–${protMax.toFixed(0)} g</b>Proteína/dia (est.)</span>
+    <span class="stat"><b>${Math.round(agua)} ml</b>Água/dia (est. 35 ml/kg)</span>
+    <p style="margin-top:10px;color:var(--muted)">
+      <b>HB 1984 ♂:</b> 88,362 + 13,397×P + 4,799×A − 5,677×I &nbsp;·&nbsp;
+      <b>♀:</b> 447,593 + 9,247×P + 3,098×A − 4,330×I<br>
+      <b>Katch-McArdle:</b> 370 + 21,6 × massa magra (kg). Informe o % de gordura (bioimpedância) para calcular.
+    </p>`;
+}
+
+function viewPlano(c){
+  const pac=DB.pacientes.find(p=>p.id===(selectedPacienteId||DB.pacientes[0]?.id));
+  const key=pac?String(pac.id):'';
+  const plano=DB.planos[key]||{refeicoes:{cafe:[],lanche1:[],almoco:[],lanche2:[],jantar:[],ceia:[]}};
+  const refNomes={cafe:'Café da manhã',lanche1:'Lanche da manhã',almoco:'Almoço',lanche2:'Lanche da tarde',jantar:'Jantar',ceia:'Ceia'};
+  function linhas(ref){
+    return (plano.refeicoes[ref]||[]).map((item,i)=>{
+      const a=DB.alimentos.find(x=>x.id===item.alimId);
+      const tot=a?{kcal:a.kcal*item.qtd, prot:a.prot*item.qtd, carb:a.carb*item.qtd, lip:a.lip*item.qtd}:{};
+      return `<tr>
+        <td>${esc(a?a.nome:'?')}</td><td>${item.qtd}</td><td>${esc(a?a.medida:'')}</td>
+        <td>${tot.kcal?tot.kcal.toFixed(0):'—'}</td>
+        <td>${tot.prot?tot.prot.toFixed(1):'—'}</td>
+        <td><button class="btn" onclick="removerDoPlano('${ref}',${i})">✕</button></td></tr>`;
+    }).join('');
+  }
+  let totais={kcal:0,prot:0,carb:0,lip:0};
+  Object.values(plano.refeicoes).forEach(arr=>arr.forEach(item=>{
+    const a=DB.alimentos.find(x=>x.id===item.alimId); if(!a) return;
+    totais.kcal+=a.kcal*item.qtd; totais.prot+=a.prot*item.qtd;
+    totais.carb+=a.carb*item.qtd; totais.lip+=a.lip*item.qtd;
+  }));
+  c.innerHTML=`
+  <div class="panel">
+    <h2>Plano Alimentar / Cardápio</h2>
+    <div class="row">
+      <div class="field"><label>Paciente</label>
+        <select id="plPac" onchange="selectedPacienteId=+this.value;showView('plano')">${pacOptions(pac&&pac.id)}</select>
+      </div>
+      <div class="field"><label>Refeição</label>
+        <select id="plRef">${Object.entries(refNomes).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select>
+      </div>
+      <div class="field"><label>Alimento</label>
+        <select id="plAlim"><option value="">— escolha —</option>${DB.alimentos.map(a=>`<option value="${a.id}">${esc(a.nome)}</option>`).join('')}</select>
+      </div>
+      <div class="field" style="max-width:100px"><label>Qtd (medidas)</label><input id="plQtd" type="number" step="0.5" value="1"></div>
+    </div>
+    <div class="btns">
+      <button type="button" class="btn btn-primary" onclick="addAoPlano()">Adicionar ao cardápio</button>
+      <button type="button" class="btn btn-ok" onclick="salvarPlano()">Salvar plano</button>
+    </div>
+    <div style="margin-top:10px">
+      <span class="stat"><b>${totais.kcal.toFixed(0)}</b>kcal total</span>
+      <span class="stat"><b>${totais.prot.toFixed(1)} g</b>Proteína</span>
+      <span class="stat"><b>${totais.carb.toFixed(1)} g</b>Carboidrato</span>
+      <span class="stat"><b>${totais.lip.toFixed(1)} g</b>Lipídeos</span>
+    </div>
+  </div>
+  ${Object.entries(refNomes).map(([k,v])=>`
+    <div class="panel">
+      <h2 style="font-size:1rem">${v}</h2>
+      <table><thead><tr><th>Alimento</th><th>Qtd</th><th>Medida</th><th>kcal</th><th>Prot</th><th></th></tr></thead>
+      <tbody>${linhas(k)||'<tr><td colspan="6">Nenhum alimento</td></tr>'}</tbody></table>
+    </div>`).join('')}
+  <div class="panel contactFooter">
+    <b>${esc(CONTATO.nome)}</b> · ${esc(CONTATO.crn)}<br>
+    WhatsApp: <a href="https://wa.me/${CONTATO.whatsapp}" target="_blank" rel="noopener">+55 ${CONTATO.whatsapp.replace(/^55/,'').replace(/(\d{2})(\d+)/,'$1 $2')}</a>
+    ${CONTATO.email?` · E-mail: <a href="mailto:${CONTATO.email}">${esc(CONTATO.email)}</a>`:''}<br>
+    Site: <a href="${CONTATO.site}" target="_blank" rel="noopener">${CONTATO.site.replace('https://','')}</a>
+  </div>`;
+  window._planoTmp=plano;
+}
+function addAoPlano(){
+  const plPac=document.getElementById('plPac');
+  const plRef=document.getElementById('plRef');
+  const plAlim=document.getElementById('plAlim');
+  const plQtd=document.getElementById('plQtd');
+  if(!plPac||!plRef||!plAlim){ toast('Campos do plano não encontrados'); return; }
+  const id=String(plPac.value||'');
+  if(!id){ toast('Selecione o paciente'); return; }
+  const alimId=parseInt(plAlim.value,10);
+  if(!alimId){ toast('Selecione um alimento da tabela'); return; }
+  const qtd=parseFloat(plQtd&&plQtd.value)||1;
+  const ref=plRef.value||'cafe';
+  if(!DB.planos) DB.planos={};
+  const plano=DB.planos[id]||window._planoTmp||{refeicoes:{cafe:[],lanche1:[],almoco:[],lanche2:[],jantar:[],ceia:[]}};
+  if(!plano.refeicoes) plano.refeicoes={cafe:[],lanche1:[],almoco:[],lanche2:[],jantar:[],ceia:[]};
+  if(!plano.refeicoes[ref]) plano.refeicoes[ref]=[];
+  plano.refeicoes[ref].push({alimId,qtd});
+  DB.planos[id]=plano;
+  window._planoTmp=plano;
+  selectedPacienteId=+id;
+  saveDB();
+  showView('plano');
+  toast('Alimento adicionado ao cardápio');
+}
+function removerDoPlano(ref,i){
+  const plPac=document.getElementById('plPac');
+  const id=String(plPac?plPac.value:(selectedPacienteId||''));
+  if(!id||!DB.planos[id]){ toast('Plano não encontrado'); return; }
+  const plano=DB.planos[id];
+  if(!plano.refeicoes[ref]) return;
+  plano.refeicoes[ref].splice(i,1);
+  DB.planos[id]=plano;
+  window._planoTmp=plano;
+  saveDB();
+  showView('plano');
+  toast('Item removido');
+}
+function salvarPlano(){
+  const plPac=document.getElementById('plPac');
+  const id=String(plPac?plPac.value:'');
+  if(!id){ toast('Selecione o paciente'); return; }
+  if(window._planoTmp) DB.planos[id]=window._planoTmp;
+  saveDB(); toast('Plano alimentar salvo!');
+}
+
+function viewAgenda(c){
+  c.innerHTML=`
+  <div class="panel">
+    <h2>Agenda / Agendamentos</h2>
+    <div class="row">
+      <div class="field"><label>Paciente</label><select id="agPac">${pacOptions()}</select></div>
+      <div class="field"><label>Data</label><input id="agData" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+      <div class="field"><label>Hora</label><input id="agHora" type="time" value="09:00"></div>
+      <div class="field"><label>Anotação</label><input id="agNota" placeholder="Consulta de retorno..."></div>
+    </div>
+    <div class="btns">
+      <button class="btn btn-primary" onclick="addAgenda()">Agendar consulta</button>
+    </div>
+  </div>
+  <div class="panel">
+    <h2>Agendados</h2>
+    <table>
+      <thead><tr><th>Data</th><th>Hora</th><th>Paciente</th><th>Anotação</th><th></th></tr></thead>
+      <tbody>
+        ${DB.agenda.slice().sort((a,b)=>(a.data+a.hora).localeCompare(b.data+b.hora)).map((a,i)=>{
+          const p=DB.pacientes.find(x=>x.id===a.pacId);
+          return `<tr><td>${a.data}</td><td>${a.hora}</td><td>${esc(p?p.nome:'')}</td><td>${esc(a.nota)}</td>
+            <td><button class="btn" onclick="delAgenda(${i})">Cancelar</button></td></tr>`;
+        }).join('')||'<tr><td colspan="5">Nenhum agendamento</td></tr>'}
+      </tbody>
+    </table>
+  </div>`;
+}
+function addAgenda(){
+  DB.agenda.push({
+    id:DB.seq.ag++, pacId:+$('#agPac').value,
+    data:$('#agData').value, hora:$('#agHora').value, nota:$('#agNota').value
+  });
+  saveDB(); toast('Consulta agendada!'); showView('agenda');
+}
+function delAgenda(i){
+  // sort changes index — delete by reconstructing from displayed order
+  const sorted=DB.agenda.slice().sort((a,b)=>(a.data+a.hora).localeCompare(b.data+b.hora));
+  const item=sorted[i];
+  DB.agenda=DB.agenda.filter(x=>x!==item);
+  saveDB(); toast('Agendamento cancelado'); showView('agenda');
+}
+
+function viewRelatorio(c){
+  const pac=DB.pacientes.find(p=>p.id===(selectedPacienteId||DB.pacientes[0]?.id));
+  if(!pac){ c.innerHTML='<div class="panel"><h2>Relatório</h2><p>Cadastre um paciente primeiro.</p></div>'; return; }
+  const v=imc(pac.peso,pac.altura); const cl=classIMC(v);
+  const an=DB.anamneses[pac.id];
+  c.innerHTML=`
+  <div class="panel">
+    <h2>Resumo do Paciente</h2>
+    <div class="row">
+      <div class="field"><label>Paciente</label>
+        <select id="relPac" onchange="selectedPacienteId=+this.value;showView('relatorio')">${pacOptions(pac.id)}</select>
+      </div>
+    </div>
+    <p><b>${esc(pac.nome)}</b> · ${ageFrom(pac.nasc)} anos · Sexo ${pac.sexo}<br>
+    Peso: ${pac.peso??'—'} kg · Altura: ${pac.altura??'—'} m · IMC: ${v?v.toFixed(1):'—'} <span class="badge ${cl.c}">${cl.t}</span></p>
+    <p>Tel: ${esc(pac.tel)} · E-mail: ${esc(pac.email)}</p>
+    ${an?`<h3>Anamnese</h3>
+      <p><b>Queixa:</b> ${esc(an.queixa)||'—'}</p>
+      <p><b>História:</b> ${esc(an.historia)||'—'}</p>
+      <p><b>Recordatório:</b> ${esc(an.recordatorio)||'—'}</p>`:'<p><i>Sem anamnese registrada.</i></p>'}
+    <div class="btns"><button class="btn" onclick="imprimirA4()">Imprimir / Salvar PDF</button></div>
+  </div>`;
+}
+
+function viewEvolucao(c){
+  c.innerHTML=`<div class="panel"><h2>Evolução de Peso</h2>
+  <p>No clone web, o peso atual fica no cadastro do paciente. Evolução histórica completa exige múltiplas consultas salvas (em desenvolvimento).</p>
+  <table><thead><tr><th>Paciente</th><th>Peso atual (kg)</th><th>IMC</th></tr></thead>
+  <tbody>${DB.pacientes.map(p=>{
+    const v=imc(p.peso,p.altura); const cl=classIMC(v);
+    return `<tr><td>${esc(p.nome)}</td><td>${p.peso??'—'}</td><td>${v?v.toFixed(1):'—'} <span class="badge ${cl.c}">${cl.t}</span></td></tr>`;
+  }).join('')}</tbody></table></div>`;
+}
+
+function viewBackup(c){
+  c.innerHTML=`
+  <div class="panel">
+    <h2>Backup / Restaurar</h2>
+    <p>Exporta ou importa todos os dados do clone (JSON no navegador).</p>
+    <div class="btns">
+      <button class="btn btn-primary" onclick="exportBackup()">Salvar backup (JSON)</button>
+      <label class="btn" style="display:inline-block">Restaurar backup
+        <input type="file" accept="application/json" style="display:none" onchange="importBackup(event)">
+      </label>
+    </div>
+  </div>`;
+}
+function exportBackup(){
+  const blob=new Blob([JSON.stringify(DB,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='limanet-backup-'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+  toast('Backup realizado com sucesso!');
+}
+function importBackup(ev){
+  const f=ev.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      DB=JSON.parse(r.result); saveDB();
+      toast('Restauração do backup realizada com sucesso!');
+      showView('inicio');
+    }catch(e){ toast('Arquivo de backup inválido'); }
+  };
+  r.readAsText(f);
+}
+
+function viewConfig(c){
+  c.innerHTML=`
+  <div class="panel">
+    <h2>Configurações</h2>
+    <div class="field"><label>Nome do nutricionista</label><input id="cfgNome" value="${esc(DB.user.nome)}"></div>
+    <div class="field"><label>CRN</label><input id="cfgCrn" value="${esc(DB.user.crn)}"></div>
+    <div class="field"><label>E-mail de contato (aparece na receita)</label><input id="cfgEmail" value="${esc(CONTATO.email)}" placeholder="seu@email.com"></div>
+    <div class="field"><label>WhatsApp (só números, com DDI)</label><input id="cfgWa" value="${esc(CONTATO.whatsapp)}"></div>
+    <div class="field"><label>Chave API Gemini (guardada só neste navegador)</label>
+      <input id="cfgGemini" type="password" value="${esc(localStorage.getItem('limanet_gemini_key')||'')}" placeholder="AIza...">
+    </div>
+    <p style="color:var(--muted);font-size:12px">Obtenha em <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a>. Não partilhe a chave. Se já foi exposta, gere uma nova.</p>
+    <div class="btns"><button class="btn btn-primary" onclick="
+      DB.user.nome=$('#cfgNome').value;
+      DB.user.crn=$('#cfgCrn').value;
+      CONTATO.nome=DB.user.nome; CONTATO.crn=DB.user.crn;
+      CONTATO.email=$('#cfgEmail').value.trim();
+      CONTATO.whatsapp=$('#cfgWa').value.replace(/\\D/g,'');
+      saveDB();
+      document.getElementById('lblUser').textContent=DB.user.nome+' · '+DB.user.crn;
+      toast('Configurações salvas');
+    ">Salvar</button></div>
+    <p style="margin-top:12px;color:var(--muted)">Armazenamento: <b>localStorage</b> do navegador (chave <code>limanet_v1</code>). Não há servidor nem banco Access. Faça backup periódico em Utilitários.</p>
+  </div>`;
+}
+
+/* ===== EQUIVALÊNCIAS ===== */
+function viewEquivalencias(c){
+  if(!DB.equivalencias) DB.equivalencias=[];
+  c.innerHTML=`
+  <div class="panel">
+    <h2>Guia de Equivalências / Substituições</h2>
+    <p style="color:var(--muted)">Grupos de alimentos intercambiáveis por porção aproximada (base comum em planejamento dietético).</p>
+    <div class="row">
+      <div class="field"><label>Grupo</label><input id="eqGrupo" placeholder="ex: Frutas"></div>
+      <div class="field"><label>Porção padrão</label><input id="eqPorcao" placeholder="ex: 1 unidade média"></div>
+      <div class="field" style="max-width:100px"><label>kcal aprox.</label><input id="eqKcal" type="number" step="1"></div>
+      <div class="field"><label>Exemplos de substituição</label><input id="eqEx" placeholder="1 maçã · 1 banana · ..."></div>
+    </div>
+    <div class="btns">
+      <button class="btn btn-primary" onclick="addEquivalencia()">Incluir grupo</button>
+    </div>
+  </div>
+  <div class="panel">
+    <table>
+      <thead><tr><th>Código</th><th>Grupo</th><th>Porção padrão</th><th>kcal</th><th>Exemplos de substituição</th><th></th></tr></thead>
+      <tbody>
+        ${DB.equivalencias.map((e,i)=>`<tr>
+          <td>${e.id}</td><td><b>${esc(e.grupo)}</b></td><td>${esc(e.porcao)}</td><td>${e.kcal}</td>
+          <td>${esc(e.exemplos)}</td>
+          <td><button class="btn" onclick="delEquivalencia(${i})">Excluir</button></td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>`;
+}
+function addEquivalencia(){
+  const grupo=$('#eqGrupo').value.trim();
+  if(!grupo){ toast('Informe o nome do grupo!'); return; }
+  if(!DB.seq.equiv) DB.seq.equiv=1;
+  DB.equivalencias.push({
+    id:DB.seq.equiv++, grupo,
+    porcao:$('#eqPorcao').value, kcal:parseFloat($('#eqKcal').value)||0,
+    exemplos:$('#eqEx').value
+  });
+  saveDB(); toast('Grupo de equivalência incluído!'); showView('equivalencias');
+}
+function delEquivalencia(i){
+  if(!confirm('Excluir este grupo de equivalência?')) return;
+  DB.equivalencias.splice(i,1); saveDB(); showView('equivalencias');
+}
+
+/* ===== GESTANTE ===== */
+function viewGestante(c){
+  const pac=DB.pacientes.find(p=>p.id===(selectedPacienteId||DB.pacientes[0]?.id));
+  c.innerHTML=`
+  <div class="panel">
+    <h2>Cálculos Gestante</h2>
+    <div class="row">
+      <div class="field"><label>Paciente</label>
+        <select id="gPac" onchange="selectedPacienteId=+this.value;showView('gestante')">${pacOptions(pac&&pac.id)}</select>
+      </div>
+      <div class="field"><label>Idade gestacional (semanas)</label><input id="gIG" type="number" min="1" max="42" value="20"></div>
+      <div class="field"><label>Peso pré-gestacional (kg)</label><input id="gPesoPre" type="number" step="0.1" value="${pac&&pac.peso!=null?pac.peso:''}"></div>
+      <div class="field"><label>Peso atual (kg)</label><input id="gPesoAt" type="number" step="0.1" value="${pac&&pac.peso!=null?pac.peso:''}"></div>
+      <div class="field"><label>Altura (m)</label><input id="gAlt" type="number" step="0.01" value="${pac&&pac.altura!=null?pac.altura:''}"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Altura uterina (cm) — opcional</label><input id="gAU" type="number" step="0.1"></div>
+      <div class="field"><label>Trimestre</label>
+        <select id="gTrim">
+          <option value="1">1º trimestre</option>
+          <option value="2" selected>2º trimestre</option>
+          <option value="3">3º trimestre</option>
+        </select>
+      </div>
+    </div>
+    <div class="btns">
+      <button class="btn btn-primary" onclick="calcGestante()">Calcular</button>
+    </div>
+    <div id="gResult" style="margin-top:14px"></div>
+  </div>
+  <div class="panel">
+    <h2>Referência rápida — ganho de peso (IOM)</h2>
+    <table>
+      <thead><tr><th>IMC pré-gestacional</th><th>Classificação</th><th>Ganho total recomendado</th><th>Ganho semanal (2º/3º tri)</th></tr></thead>
+      <tbody>
+        <tr><td>&lt; 18,5</td><td>Baixo peso</td><td>12,5 – 18 kg</td><td>0,44 – 0,58 kg/sem</td></tr>
+        <tr><td>18,5 – 24,9</td><td>Eutrófico</td><td>11,5 – 16 kg</td><td>0,35 – 0,50 kg/sem</td></tr>
+        <tr><td>25 – 29,9</td><td>Sobrepeso</td><td>7 – 11,5 kg</td><td>0,23 – 0,33 kg/sem</td></tr>
+        <tr><td>≥ 30</td><td>Obesidade</td><td>5 – 9 kg</td><td>0,17 – 0,27 kg/sem</td></tr>
+      </tbody>
+    </table>
+    <p style="color:var(--muted);margin-top:10px">Energia adicional típica: ~+0 kcal (1º tri) · +340 kcal (2º) · +452 kcal (3º) sobre a necessidade pré-gestacional (IOM). Ajuste clínico individual.</p>
+  </div>`;
+}
+function calcGestante(){
+  const pesoPre=parseFloat($('#gPesoPre').value);
+  const pesoAt=parseFloat($('#gPesoAt').value);
+  const alt=parseFloat($('#gAlt').value);
+  const ig=parseFloat($('#gIG').value)||0;
+  const trim=+$('#gTrim').value;
+  const au=parseFloat($('#gAU').value);
+  if(!pesoPre||!alt){ toast('Informe peso pré-gestacional e altura!'); return; }
+  const imcPre=pesoPre/(alt*alt);
+  let faixa='Eutrófico', ganhoMin=11.5, ganhoMax=16, semMin=0.35, semMax=0.50;
+  if(imcPre<18.5){ faixa='Baixo peso'; ganhoMin=12.5; ganhoMax=18; semMin=0.44; semMax=0.58; }
+  else if(imcPre<25){ faixa='Eutrófico'; ganhoMin=11.5; ganhoMax=16; semMin=0.35; semMax=0.50; }
+  else if(imcPre<30){ faixa='Sobrepeso'; ganhoMin=7; ganhoMax=11.5; semMin=0.23; semMax=0.33; }
+  else { faixa='Obesidade'; ganhoMin=5; ganhoMax=9; semMin=0.17; semMax=0.27; }
+  const ganhoAtual=(pesoAt&&pesoPre)?(pesoAt-pesoPre):null;
+  const extra={1:0,2:340,3:452}[trim]||0;
+  // TMB pré como base (aprox. mulher)
+  const idade=ageFrom(DB.pacientes.find(p=>p.id==+$('#gPac').value)?.nasc);
+  let tmbBase=null, getGest=null;
+  if(typeof idade==='number' && pesoPre && alt){
+    tmbBase=tmbMifflin('F', pesoPre, alt*100, idade);
+    getGest=tmbBase*1.375+extra; // atividade leve + adicional gestacional
+  }
+  // Altura uterina esperada ~ IG em cm após 20 sem (regra prática)
+  let auMsg='';
+  if(au && ig>=20){
+    const esp=ig;
+    const dif=au-esp;
+    if(Math.abs(dif)<=2) auMsg='Altura uterina compatível com a IG (±2 cm).';
+    else if(dif>2) auMsg='Altura uterina acima do esperado para a IG — avaliar clinicamente.';
+    else auMsg='Altura uterina abaixo do esperado para a IG — avaliar clinicamente.';
+  }
+  $('#gResult').innerHTML=`
+    <span class="stat"><b>${imcPre.toFixed(1)}</b>IMC pré-gestacional · ${faixa}</span>
+    <span class="stat"><b>${ganhoMin} – ${ganhoMax} kg</b>Ganho total IOM</span>
+    <span class="stat"><b>${semMin} – ${semMax} kg</b>/semana (2º–3º tri)</span>
+    ${ganhoAtual!=null?`<span class="stat"><b>${ganhoAtual>=0?'+':''}${ganhoAtual.toFixed(1)} kg</b>Ganho até agora (IG ${ig} sem)</span>`:''}
+    <span class="stat"><b>+${extra} kcal</b>Adicional energético (${trim}º tri)</span>
+    ${getGest?`<span class="stat"><b>${Math.round(getGest)} kcal</b>GET gestacional (est.)</span>`:''}
+    ${auMsg?`<p style="margin-top:10px">${auMsg}</p>`:''}
+    <p style="margin-top:8px;color:var(--muted)">Valores de referência IOM. Conduta final é clínica e individualizada (gemelaridade, patologias, adolescente).</p>`;
+}
+
+/* ===== EXAMES LABORATORIAIS ===== */
+const EXAMES_PADRAO = [
+  {id:'hb', nome:'Hemoglobina', un:'g/dL', refF:'12,0 – 15,5', refM:'13,5 – 17,5'},
+  {id:'ht', nome:'Hematócrito', un:'%', refF:'36 – 46', refM:'41 – 50'},
+  {id:'vcm', nome:'VCM', un:'fL', refF:'80 – 96', refM:'80 – 96'},
+  {id:'rdw', nome:'RDW', un:'%', refF:'11 – 15', refM:'11 – 15'},
+  {id:'leu', nome:'Leucócitos', un:'/mm³', refF:'4.000 – 11.000', refM:'4.000 – 11.000'},
+  {id:'ferritina', nome:'Ferritina', un:'ng/mL', refF:'15 – 150', refM:'30 – 400'},
+  {id:'ferro', nome:'Ferro sérico', un:'µg/dL', refF:'50 – 170', refM:'65 – 175'},
+  {id:'vitd', nome:'Vitamina D (25-OH)', un:'ng/mL', refF:'≥ 30', refM:'≥ 30'},
+  {id:'b12', nome:'Vitamina B12', un:'pg/mL', refF:'200 – 900', refM:'200 – 900'},
+  {id:'folato', nome:'Ácido fólico', un:'ng/mL', refF:'3 – 17', refM:'3 – 17'},
+  {id:'glicose', nome:'Glicose jejum', un:'mg/dL', refF:'70 – 99', refM:'70 – 99'},
+  {id:'hba1c', nome:'HbA1c', un:'%', refF:'< 5,7', refM:'< 5,7'},
+  {id:'ct', nome:'Colesterol total', un:'mg/dL', refF:'< 200', refM:'< 200'},
+  {id:'ldl', nome:'LDL', un:'mg/dL', refF:'< 100', refM:'< 100'},
+  {id:'hdl', nome:'HDL', un:'mg/dL', refF:'≥ 50', refM:'≥ 40'},
+  {id:'tg', nome:'Triglicerídeos', un:'mg/dL', refF:'< 150', refM:'< 150'},
+  {id:'tsh', nome:'TSH', un:'mUI/L', refF:'0,4 – 4,0', refM:'0,4 – 4,0'},
+  {id:'albumina', nome:'Albumina', un:'g/dL', refF:'3,5 – 5,0', refM:'3,5 – 5,0'},
+  {id:'pcr', nome:'PCR', un:'mg/L', refF:'< 5', refM:'< 5'},
+  {id:'creatinina', nome:'Creatinina', un:'mg/dL', refF:'0,5 – 1,1', refM:'0,7 – 1,3'}
+];
+function viewExames(c){
+  if(!DB.exames) DB.exames={};
+  const pac=DB.pacientes.find(p=>p.id===(selectedPacienteId||DB.pacientes[0]?.id));
+  const key=pac?String(pac.id):'';
+  const salvos=DB.exames[key]||{data:'', valores:{}};
+  const sexo=pac?pac.sexo:'F';
+  c.innerHTML=`
+  <div class="panel">
+    <h2>Exames Laboratoriais</h2>
+    <div class="row">
+      <div class="field"><label>Paciente</label>
+        <select id="exPac" onchange="selectedPacienteId=+this.value;showView('exames')">${pacOptions(pac&&pac.id)}</select>
+      </div>
+      <div class="field" style="max-width:180px"><label>Data do exame</label>
+        <input id="exData" type="date" value="${esc(salvos.data||new Date().toISOString().slice(0,10))}">
+      </div>
+    </div>
+    <table>
+      <thead><tr><th>Exame</th><th>Resultado</th><th>Unidade</th><th>Referência (${sexo})</th></tr></thead>
+      <tbody>
+        ${EXAMES_PADRAO.map(e=>{
+          const ref=sexo==='M'?e.refM:e.refF;
+          const val=salvos.valores[e.id]!=null?salvos.valores[e.id]:'';
+          return `<tr>
+            <td>${esc(e.nome)}</td>
+            <td><input id="ex_${e.id}" value="${esc(val)}" style="width:110px;padding:5px 8px;border:1px solid var(--line);border-radius:4px"></td>
+            <td>${esc(e.un)}</td>
+            <td style="color:var(--muted)">${esc(ref)}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+    <div class="field" style="margin-top:12px"><label>Observações / interpretação nutricional</label>
+      <textarea id="exObs">${esc(salvos.obs||'')}</textarea>
+    </div>
+    <h3 style="margin:16px 0 8px;color:var(--primary2)">Bioimpedância</h3>
+    <div class="row">
+      <div class="field"><label>% Gordura</label><input id="bioGord" type="number" step="0.1" value="${esc((salvos.bio&&salvos.bio.gordura)||'')}"></div>
+      <div class="field"><label>Massa magra (kg)</label><input id="bioMM" type="number" step="0.1" value="${esc((salvos.bio&&salvos.bio.massaMagra)||'')}"></div>
+      <div class="field"><label>Água corporal %</label><input id="bioAgua" type="number" step="0.1" value="${esc((salvos.bio&&salvos.bio.agua)||'')}"></div>
+      <div class="field"><label>TMB aparelho</label><input id="bioTmb" type="number" step="1" value="${esc((salvos.bio&&salvos.bio.tmb)||'')}"></div>
+      <div class="field"><label>Ângulo de fase</label><input id="bioAF" type="number" step="0.1" value="${esc((salvos.bio&&salvos.bio.angulo)||'')}"></div>
+    </div>
+    <h3 style="margin:16px 0 8px;color:var(--primary2)">Importar texto de laudo / PDF</h3>
+    <p style="color:var(--muted);margin:0 0 8px;font-size:12px">Cole o texto do PDF do laboratório ou da balança de bioimpedância. O sistema tenta preencher campos reconhecidos (hemoglobina, ferritina, glicose, etc.).</p>
+    <div class="field"><textarea id="exImport" rows="4" placeholder="Cole aqui o texto do laudo..."></textarea></div>
+    <div class="btns">
+      <button class="btn" onclick="importarTextoExames()">Importar do texto</button>
+      <button class="btn btn-primary" onclick="salvarExames()">Salvar exames</button>
+      <button class="btn" onclick="imprimirA4()">Imprimir</button>
+    </div>
+  </div>`;
+}
+function importarTextoExames(){
+  const txt=($('#exImport').value||'').toLowerCase().normalize('NFD').replace(/\p{M}/gu,'');
+  if(!txt.trim()){ toast('Cole o texto do laudo primeiro'); return; }
+  const mapa=[
+    [/hemoglobin[ae]?[^\d]{0,20}(\d+[.,]\d+|\d+)/i,'hb'],
+    [/hematocrit[oe]?[^\d]{0,20}(\d+[.,]\d+|\d+)/i,'ht'],
+    [/\bvcm\b[^\d]{0,20}(\d+[.,]\d+|\d+)/i,'vcm'],
+    [/\brdw\b[^\d]{0,20}(\d+[.,]\d+|\d+)/i,'rdw'],
+    [/leucocit[^\d]{0,20}(\d+[.,]?\d*)/i,'leu'],
+    [/ferritin[ae]?[^\d]{0,20}(\d+[.,]\d+|\d+)/i,'ferritina'],
+    [/ferro seric[oa]?[^\d]{0,20}(\d+[.,]\d+|\d+)/i,'ferro'],
+    [/vitamina d|25.?oh|25oh[^\d]{0,20}(\d+[.,]\d+|\d+)/i,'vitd'],
+    [/vitamina b12|cobalamina[^\d]{0,20}(\d+[.,]\d+|\d+)/i,'b12'],
+    [/acido folico|folato[^\d]{0,20}(\d+[.,]\d+|\d+)/i,'folato'],
+    [/glicose[^\d]{0,30}(\d+[.,]\d+|\d+)/i,'glicose'],
+    [/hba1c|hemoglobina glic[^\d]{0,20}(\d+[.,]\d+|\d+)/i,'hba1c'],
+    [/colesterol total[^\d]{0,20}(\d+[.,]\d+|\d+)/i,'ct'],
+    [/\bldl\b[^\d]{0,20}(\d+[.,]\d+|\d+)/i,'ldl'],
+    [/\bhdl\b[^\d]{0,20}(\d+[.,]\d+|\d+)/i,'hdl'],
+    [/triglicer[^\d]{0,20}(\d+[.,]\d+|\d+)/i,'tg'],
+    [/\btsh\b[^\d]{0,20}(\d+[.,]\d+|\d+)/i,'tsh'],
+    [/albumin[ae]?[^\d]{0,20}(\d+[.,]\d+|\d+)/i,'albumina'],
+    [/\bpcr\b|proteina c reativa[^\d]{0,20}(\d+[.,]\d+|\d+)/i,'pcr'],
+    [/creatinin[ae]?[^\d]{0,20}(\d+[.,]\d+|\d+)/i,'creatinina'],
+    [/%?\s*gordura|fat\s*%[^\d]{0,15}(\d+[.,]\d+|\d+)/i,'bioGord'],
+    [/massa magra|fat.?free[^\d]{0,15}(\d+[.,]\d+|\d+)/i,'bioMM'],
+    [/agua corporal|body water[^\d]{0,15}(\d+[.,]\d+|\d+)/i,'bioAgua'],
+    [/angulo de fase|phase angle[^\d]{0,15}(\d+[.,]\d+|\d+)/i,'bioAF']
+  ];
+  let n=0;
+  mapa.forEach(([re,id])=>{
+    const m=txt.match(re);
+    if(!m) return;
+    const val=m[1].replace(',','.');
+    const el=document.getElementById(id.startsWith('bio')?id:'ex_'+id);
+    if(el){ el.value=val; n++; }
+  });
+  toast(n?`Importados ${n} valores do texto`:'Nenhum valor reconhecido — preencha manualmente');
+}
+function salvarExames(){
+  const id=$('#exPac').value;
+  if(!id){ toast('Informe o paciente!'); return; }
+  const valores={};
+  EXAMES_PADRAO.forEach(e=>{
+    const v=document.getElementById('ex_'+e.id).value.trim();
+    if(v!=='') valores[e.id]=v;
+  });
+  const bio={
+    gordura:$('#bioGord').value, massaMagra:$('#bioMM').value,
+    agua:$('#bioAgua').value, tmb:$('#bioTmb').value, angulo:$('#bioAF').value
+  };
+  if(!DB.exames) DB.exames={};
+  DB.exames[id]={ data:$('#exData').value, valores, bio, obs:$('#exObs').value };
+  saveDB(); toast('Exames e bioimpedância salvos!');
+}
+
+/* ===== TEIA METABÓLICA + CHECKLIST MICRONUTRIENTES ===== */
+const SINTOMAS_MICRO = [
+  {t:'Tontura / vertigens / zonzeira', n:'B2, B3, B6, B12, Fe, P, Ni', eixos:['neuro','micro']},
+  {t:'Sonolência', n:'B1, B6', eixos:['energia','neuro']},
+  {t:'Cansaço, fraqueza, fadiga', n:'Complexo B, C, Mg, K, P, Se, Cu', eixos:['energia','micro']},
+  {t:'Muito sensível ao frio / pés e mãos frios', n:'Fe', eixos:['micro','hormonal']},
+  {t:'Muito sensível ao calor / calor no corpo', n:'Mg', eixos:['micro','hormonal']},
+  {t:'Sensível ou mais vulnerável ao álcool', n:'Zn, ômega-6', eixos:['detox','micro']},
+  {t:'Muita sede', n:'Na, K, ômega-6, Mg ou fungos', eixos:['glicemia','intestino']},
+  {t:'Fica facilmente vermelho', n:'Mg', eixos:['inflamacao','micro']},
+  {t:'Diminuição da memória', n:'B1, B3, B9, A, Ca, Mg, Vit.K, Zn', eixos:['neuro','micro']},
+  {t:'Diminuição da atenção / concentração', n:'Zn, P', eixos:['neuro','micro']},
+  {t:'Dificuldade em pegar no sono', n:'B1, B3, B9, A, Ca, Mg', eixos:['neuro','hormonal']},
+  {t:'Inquietação / impaciência / agitação', n:'B1, C, Ca, D, Mg', eixos:['neuro']},
+  {t:'Irritabilidade', n:'B1, B3, B6, D, Ca, Mg, Zn, Fe, P', eixos:['neuro','micro']},
+  {t:'Nervosismo', n:'B1, B3, B6, D, Ca, Mg, Vit.K, Cu', eixos:['neuro']},
+  {t:'Tendência a tristeza / desânimo', n:'C, Mg, B6', eixos:['neuro']},
+  {t:'Humor deprimido', n:'B3, C', eixos:['neuro']},
+  {t:'Manchas roxas fáceis / espontâneas', n:'C, K', eixos:['inflamacao','micro']},
+  {t:'Erupções na pele (dermatite, urticária)', n:'B3, Zn, Mn', eixos:['imunidade','intestino']},
+  {t:'Ferida no canto da boca (boqueira)', n:'B2, B3, B6', eixos:['micro','intestino']},
+  {t:'Fluido ou inflamação nos ouvidos', n:'Mg', eixos:['inflamacao']},
+  {t:'Visão turva, areia nos olhos, lacrimejamento, visão noturna difícil', n:'B2', eixos:['micro']},
+  {t:'Olhos: queimação, irritação, coceira', n:'B2, B6', eixos:['micro']},
+  {t:'Dor na boca do estômago', n:'B1, B6', eixos:['intestino']},
+  {t:'Digestão lenta, vagarosa, difícil', n:'Zn', eixos:['intestino','micro']},
+  {t:'Falta de apetite', n:'B1, B3, B6, B9, B12, C, A, Mg, Zn, Fe', eixos:['intestino','micro']},
+  {t:'Vômitos involuntários', n:'B1, Ca, Mg', eixos:['intestino']},
+  {t:'Intestino preso / ressecado (não todos os dias)', n:'B1, B3, B9, B12, Fe', eixos:['intestino']},
+  {t:'Quase não urina durante o dia', n:'B1', eixos:['detox']},
+  {t:'Dores nas articulações', n:'B2, B6, C', eixos:['inflamacao']},
+  {t:'Fraqueza ou dores musculares', n:'B1, B3, B6, C, Mg, Vit.K, Se, Biotina', eixos:['energia','micro']},
+  {t:'Dores nas pernas', n:'Fe', eixos:['micro']},
+  {t:'Sensação de choque elétrico / contrações musculares', n:'B6, Mg', eixos:['neuro','micro']},
+  {t:'Cãibras noturnas nas pernas e pés', n:'Mg, B1, B6, Vit.K, Ca', eixos:['micro']},
+  {t:'Contrações musculares persistentes', n:'Mg', eixos:['micro']},
+  {t:'Retenção de água', n:'B1, Biotina, Mg, Na', eixos:['hormonal']},
+  {t:'Inchaço nos membros inferiores', n:'Fe', eixos:['micro']},
+  {t:'Mudança rápida de peso', n:'Biotina, Mg, Na', eixos:['hormonal','glicemia']},
+  {t:'Inchaço no tornozelo e/ou pulso', n:'B1, C, Cu, Na', eixos:['inflamacao']},
+  {t:'Acne (rosto, testa, costas, nádegas)', n:'C, A, Zn', eixos:['hormonal','imunidade']},
+  {t:'Pele do calcanhar dura, grossa e seca', n:'A', eixos:['micro']},
+  {t:'Manchas tipo eczema (descamação)', n:'Zn', eixos:['imunidade','intestino']},
+  {t:'Dificuldade de cicatrização', n:'C, B6, Zn', eixos:['imunidade','micro']},
+  {t:'Palma das mãos alaranjadas', n:'Excesso ou má absorção de betacaroteno', eixos:['detox','intestino']},
+  {t:'Pele com seborreia / oleosidade exagerada', n:'B2, B3, C, A, Zn', eixos:['hormonal','micro']},
+  {t:'Aumento da queda de cabelos', n:'Zn, B6, B2, Ca', eixos:['hormonal','micro']},
+  {t:'Cabelos crescem devagar / secos e quebradiços', n:'C, A, Zn', eixos:['micro']},
+  {t:'Unhas pequenas e com estrias', n:'A', eixos:['micro']},
+  {t:'Unhas frágeis e quebradiças', n:'Ca, Fe', eixos:['micro']},
+  {t:'Manchas brancas nas unhas', n:'Zn, Se', eixos:['micro']},
+  {t:'Unhas grossas, espessas', n:'A', eixos:['micro']},
+  {t:'Língua vermelha, lisa e dolorosa', n:'B2, B3, B6, B9, B12, Fe', eixos:['micro','intestino']},
+  {t:'Ardência na língua', n:'B2', eixos:['micro']},
+  {t:'Rachaduras na língua', n:'B2', eixos:['micro']},
+  {t:'Aftas', n:'B9', eixos:['micro','intestino']},
+  {t:'Coceira no ânus', n:'B1', eixos:['intestino']}
+];
+const EIXOS_TEIA = [
+  {id:'intestino', label:'Intestino\nDigestão', x:200, y:80},
+  {id:'inflamacao', label:'Inflamação', x:340, y:120},
+  {id:'energia', label:'Energia\nMitocôndria', x:380, y:240},
+  {id:'hormonal', label:'Hormonal', x:340, y:360},
+  {id:'detox', label:'Detox\nFígado', x:200, y:400},
+  {id:'neuro', label:'Neuro\nHumor', x:60, y:360},
+  {id:'imunidade', label:'Imunidade', x:20, y:240},
+  {id:'glicemia', label:'Glicemia\nInsulina', x:60, y:120},
+  {id:'micro', label:'Micronutrientes', x:200, y:240}
+];
+const EIXOS_LINKS = [
+  [0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,7],[7,0],
+  [8,0],[8,1],[8,2],[8,3],[8,4],[8,5],[8,6],[8,7]
+];
+
+function viewTeia(c){
+  if(!DB.teia) DB.teia={};
+  const pac=DB.pacientes.find(p=>p.id===(selectedPacienteId||DB.pacientes[0]?.id));
+  const key=pac?String(pac.id):'';
+  const dados=DB.teia[key]||{sintomas:[], eixos:[]};
+  const marcados=new Set(dados.sintomas||[]);
+  const eixosOn=new Set(dados.eixos||[]);
+
+  // contar nutrientes sugeridos
+  const nutriCount={};
+  SINTOMAS_MICRO.forEach((s,i)=>{
+    if(!marcados.has(i)) return;
+    s.n.split(/[,/]+/).map(x=>x.trim()).filter(Boolean).forEach(n=>{
+      nutriCount[n]=(nutriCount[n]||0)+1;
+    });
+    (s.eixos||[]).forEach(e=>eixosOn.add(e));
+  });
+  const topNutri=Object.entries(nutriCount).sort((a,b)=>b[1]-a[1]).slice(0,12);
+
+  // ligações com exames / alergias / plano
+  const exames=DB.exames&&DB.exames[key];
+  const alerg=DB.alergias&&DB.alergias[key];
+  const plano=DB.planos&&DB.planos[key];
+
+  const nodes=EIXOS_TEIA.map(e=>{
+    const on=eixosOn.has(e.id);
+    const lines=e.label.split('\n');
+    return `<g class="teia-node ${on?'on':''}" data-eixo="${e.id}" onclick="toggleEixoTeia('${e.id}')">
+      <circle cx="${e.x}" cy="${e.y}" r="36"/>
+      <text x="${e.x}" y="${e.y+(lines.length>1?-4:4)}" text-anchor="middle">${lines[0]}</text>
+      ${lines[1]?`<text x="${e.x}" y="${e.y+12}" text-anchor="middle">${lines[1]}</text>`:''}
+    </g>`;
+  }).join('');
+  const lines=EIXOS_LINKS.map(([a,b])=>{
+    const A=EIXOS_TEIA[a], B=EIXOS_TEIA[b];
+    return `<line x1="${A.x}" y1="${A.y}" x2="${B.x}" y2="${B.y}" stroke="#95d5b2" stroke-width="2"/>`;
+  }).join('');
+
+  c.innerHTML=`
+  <div class="panel">
+    <h2>Teia de inter-relações metabólicas · Sinais e sintomas</h2>
+    <div class="row">
+      <div class="field"><label>Paciente</label>
+        <select id="teiaPac" onchange="selectedPacienteId=+this.value;showView('teia')">${pacOptions(pac&&pac.id)}</select>
+      </div>
+    </div>
+    <div class="teia-wrap">
+      <div>
+        <svg class="teia-svg" viewBox="0 0 420 480" width="100%" preserveAspectRatio="xMidYMid meet" style="max-width:300px;max-height:340px">
+          ${lines}
+          ${nodes}
+        </svg>
+        <p style="font-size:11px;color:var(--muted);max-width:300px">Clique nos eixos para marcar o que está alterado. Os sintomas assinalados também acendem eixos automaticamente.</p>
+      </div>
+      <div style="flex:1;min-width:260px">
+        <h3 style="margin:0 0 8px;color:var(--primary2)">Micronutrientes mais sugeridos pelos sintomas</h3>
+        <div>${topNutri.length?topNutri.map(([n,c])=>`<span class="chip chip-warn">${esc(n)} ×${c}</span>`).join(''):'<span class="chip">Nenhum sintoma marcado</span>'}</div>
+        <h3 style="margin:14px 0 8px;color:var(--primary2)">Ligações com o prontuário</h3>
+        <div class="btns">
+          <button class="btn" onclick="selectedPacienteId=+$('#teiaPac').value;showView('exames')">Exames lab ${exames?'✓':'—'}</button>
+          <button class="btn" onclick="selectedPacienteId=+$('#teiaPac').value;showView('alergias')">Alergias ${alerg&&(alerg.alergias||[]).length?'✓':'—'}</button>
+          <button class="btn" onclick="selectedPacienteId=+$('#teiaPac').value;showView('plano')">Plano alimentar ${plano?'✓':'—'}</button>
+        </div>
+        ${alerg&&((alerg.alergias||[]).length||(alerg.intolerancias||[]).length)?`
+          <p style="margin-top:8px"><b>Alergias:</b> ${esc((alerg.alergias||[]).join(', ')||'—')}<br>
+          <b>Intolerâncias:</b> ${esc((alerg.intolerancias||[]).join(', ')||'—')}</p>`:''}
+        ${exames?`<p style="margin-top:6px;color:var(--muted)">Exames registados em ${esc(exames.data||'—')}. Cruzar com Fe, B12, folato, vit. D, etc.</p>`:''}
+      </div>
+    </div>
+  </div>
+  <div class="panel">
+    <h2>Questionário — sinais e sintomas de deficiências de micronutrientes</h2>
+    <p style="color:var(--muted);margin-top:0">Marque o que o paciente refere. Ao lado, micronutrientes classicamente associados.</p>
+    <div style="max-height:420px;overflow:auto;border:1px solid var(--line);border-radius:8px">
+      ${SINTOMAS_MICRO.map((s,i)=>`
+        <label class="sintoma-item">
+          <input type="checkbox" class="ckSint" data-i="${i}" ${marcados.has(i)?'checked':''} onchange="toggleSintomaTeia(${i},this.checked)">
+          <span><b>${esc(s.t)}</b><br><span style="color:var(--muted)">${esc(s.n)}</span></span>
+        </label>`).join('')}
+    </div>
+    <div class="field" style="margin-top:12px"><label>Deficiências / hipóteses encontradas (texto livre)</label>
+      <textarea id="teiaHipot">${esc(dados.hipotese||'')}</textarea>
+    </div>
+    <div class="btns">
+      <button class="btn btn-primary" onclick="salvarTeia()">Salvar teia e checklist</button>
+      <button class="btn" onclick="imprimirA4()">Imprimir</button>
+    </div>
+  </div>`;
+  window._teiaEixos=eixosOn;
+  window._teiaSint=marcados;
+}
+function toggleSintomaTeia(i, on){
+  if(!window._teiaSint) window._teiaSint=new Set();
+  if(on) window._teiaSint.add(i); else window._teiaSint.delete(i);
+}
+function toggleEixoTeia(id){
+  if(!window._teiaEixos) window._teiaEixos=new Set();
+  if(window._teiaEixos.has(id)) window._teiaEixos.delete(id);
+  else window._teiaEixos.add(id);
+  // refresh visual only for nodes
+  document.querySelectorAll('.teia-node').forEach(g=>{
+    g.classList.toggle('on', window._teiaEixos.has(g.getAttribute('data-eixo')));
+  });
+}
+function salvarTeia(){
+  const id=$('#teiaPac').value;
+  if(!id){ toast('Informe o paciente!'); return; }
+  if(!DB.teia) DB.teia={};
+  // merge eixos from symptoms
+  const eixos=new Set(window._teiaEixos||[]);
+  (window._teiaSint||[]).forEach(i=>{
+    const s=SINTOMAS_MICRO[i]; if(s) (s.eixos||[]).forEach(e=>eixos.add(e));
+  });
+  DB.teia[id]={
+    sintomas:[...(window._teiaSint||[])],
+    eixos:[...eixos],
+    hipotese:$('#teiaHipot').value,
+    atualizado:new Date().toISOString().slice(0,10)
+  };
+  saveDB(); toast('Teia e checklist salvos!'); showView('teia');
+}
+
+
+function viewGlossario(c){
+  const itens=[
+    {p:'Desnutrição / baixo peso', c:'Avaliar causa (ingesta, absorção, doença). Meta calórica gradual; proteína 1,2–1,5 g/kg; monitorar refeeding. Fitoterapia de suporte: gengibre (apetite), com orientação.', f:'Gengibre (Zingiber) — uso tradicional para náusea/apetite (evidência moderada).'},
+    {p:'Obesidade / sobrepeso', c:'Déficit calórico moderado; proteína preservada; fibras; atividade. Evitar dietas muito restritivas sem acompanhamento.', f:'Chá-verde / fibras viscosas — apoio adjuvante, nunca isolados.'},
+    {p:'Sarcopenia', c:'Proteína 1,2–1,5 g/kg distribuída; treino de força; vitamina D se deficiente; leucina/alimentos proteicos em cada refeição.', f:'—'},
+    {p:'Anemia ferropriva', c:'Ferro heme + vitamina C; evitar chá/café junto às refeições com ferro; investigar perdas. Suplementação conforme protocolo pediátrico/adulto.', f:'—'},
+    {p:'Deficiência de vitamina D', c:'Sol + fontes alimentares; suplementação conforme 25-OH e faixa etária (ex.: 400–600 UI lactentes conforme SBP).', f:'—'},
+    {p:'Diabetes tipo 2 / resistência insulínica', c:'Controle de carboidratos refinados; fibras; horário das refeições; peso se indicado. Coordenar com médico.', f:'Canela — evidência limitada; não substitui medicação.'},
+    {p:'Dislipidemia', c:'Reduzir gordura saturada/trans; aumentar fibras solúveis e ômega-3; peso e atividade.', f:'Aveia (beta-glucana); linhaça — adjuvantes alimentares.'},
+    {p:'Hipertensão', c:'Padrão DASH; sódio controlado; potássio alimentar; peso.', f:'Hibisco — alguns estudos de pressão; cautela com medicação.'},
+    {p:'Constipação', c:'Fibras + água + rotina; avaliar disbiose e medicamentos.', f:'Psyllium, ameixa, linhaça — com hidratação adequada.'},
+    {p:'Diarréia / má absorção', c:'Reintrodução gradual; exclusão temporária se indicado; hidratação e eletrólitos; investigar intolerâncias.', f:'Probióticos selecionados — caso a caso.'},
+    {p:'Doença celíaca / sensibilidade ao glúten', c:'Exclusão estrita de glúten (celíaca); educação de rótulos; repor micronutrientes se déficits.', f:'—'},
+    {p:'Intolerância à lactose', c:'Redução/sem lactose; enzima lactase se útil; cálcio por outras fontes.', f:'—'},
+    {p:'Gastrite / DRGE', c:'Evitar gatilhos (álcool, fritura, excesso de cafeína); refeições menores; não deitar após comer.', f:'Camomila / erva-doce — uso tradicional para desconforto; evidência variável.'},
+    {p:'Esteatose hepática (NAFLD)', c:'Perda de peso gradual; reduzir açúcar/frutose; atividade; evitar álcool.', f:'—'},
+    {p:'Hipotireoidismo (suporte nutricional)', c:'Não interromper hormônio; cuidado com soja/cálcio perto da levotiroxina; selênio e iodo em faixa adequada.', f:'—'},
+    {p:'SOP (suporte nutricional)', c:'Padrão com baixo IG; vitamina D e inositol sob critério clínico; peso se indicado.', f:'—'},
+    {p:'Gestação (suporte geral)', c:'Ácido fólico, ferro, iodo, B12, ômega-3 conforme diretrizes; ganho de peso IOM; hidratação.', f:'Chás medicinais: muitos contraindicados — só com prescrição segura.'},
+    {p:'Idoso frágil', c:'Densidade proteica e calórica; textura segura; vitamina D, B12, cálcio; hidratação vigiada.', f:'—'},
+    {p:'Inflamação / dor crônica (suporte)', c:'Padrão anti-inflamatório (peixe, azeite, vegetais); ômega-3; peso.', f:'Cúrcuma/piperina — adjuvante alimentar; interações medicamentosas.'},
+    {p:'Ansiedade / humor (suporte nutricional)', c:'Padrão regular de refeições; magnésio alimentar; limitar álcool/cafeína excessiva; investigar déficits (B12, D, ferro).', f:'Camomila, erva-cidreira — uso tradicional; não substituem cuidado de saúde mental.'},
+    {p:'SIBO (supercrescimento bacteriano no intestino delgado)', c:'Avaliação médica (teste respiratório). Pode exigir antibiótico/rifaximina conforme prescrição. Nutricional: reduzir FODMAPs temporariamente em fases; espaçar refeições; reintrodução guiada; tratar constipação/hipocloridria se houver.', f:'Óleos essenciais (ex. menta) só com critério clínico — interações e irritação mucosa.'},
+    {p:'SIFO (supercrescimento fúngico no intestino delgado)', c:'Diagnóstico médico. Evitar excesso de açúcares simples e álcool; padrão alimentar equilibrado; não automedicar antifúngicos. Investigar imunidade e antibióticos prévios.', f:'—'},
+    {p:'SII / Síndrome do intestino irritável', c:'Dieta low-FODMAP em fases (restrição → reintrodução → personalização); fibras solúveis conforme tolerância; manejar estresse. Diário alimentar.', f:'Hortelã-pimenta (cápsulas entericas) — evidência em SII; cautela em DRGE.'},
+    {p:'DRC (doença renal crônica) — suporte nutricional', c:'Ajuste de proteína, potássio, fósforo e sódio conforme estágio e orientação nefrológica; não restringir proteína agressivamente em dialise sem protocolo. Monitorar estado nutricional.', f:'Fitoterápicos com risco renal — evitar automedicação.'},
+    {p:'Disbiose intestinal', c:'Padrão diversificado em fibras quando tolerado; limitar ultraprocessados; probióticos selecionados caso a caso; tratar causa (SIBO, antibióticos, etc.).', f:'Prebióticos (inulina etc.) — introduzir devagar se houver gases/SII.'},
+    {p:'Gastroparesia (suporte)', c:'Refeições menores e frequentes; menor teor de gordura e fibra insolúvel nas crises; textura líquida/pastosa se necessário; coordenar com gastroenterologia.', f:'—'},
+    {p:'Doença inflamatória intestinal (retocolite / Crohn) — suporte', c:'Em crise: baixa fibra residual conforme tolerância; repor perdas; em remissão: dieta mediterrânea adaptada; exclusões só com indicação. Equipe multiprofissional.', f:'—'},
+    {p:'Hiperuricemia / gota (suporte)', c:'Peso saudável; hidratação; moderar purinas (vísceras, alguns peixes) e álcool; padrões DASH/mediterrâneo.', f:'—'},
+  ];
+  const q=(document.getElementById('glBusca')||{}).value||'';
+  c.innerHTML=`
+  <div class="panel">
+    <h2>Glossário — Patologias nutricionais e condutas iniciais</h2>
+    <p style="color:var(--muted)">Material de <b>apoio educacional</b> para início de raciocínio clínico. Não substitui protocolo institucional, prescrição médica nem posologia individualizada de fitoterápicos (CFN/Anvisa).</p>
+    <div class="field"><label>Buscar</label><input id="glBusca" placeholder="ex: anemia, diabetes, constipação..." value="${esc(q)}"></div>
+    <div id="glLista"></div>
+  </div>`;
+  const lista=document.getElementById('glLista');
+  const render=()=>{
+    const qq=(document.getElementById('glBusca').value||'').toLowerCase();
+    lista.innerHTML=itens.filter(i=>!qq||i.p.toLowerCase().includes(qq)||i.c.toLowerCase().includes(qq))
+      .map(i=>`<div class="panel" style="margin-top:10px">
+        <h3 style="margin:0 0 6px;color:var(--primary2)">${esc(i.p)}</h3>
+        <p style="margin:0 0 6px"><b>Conduta nutricional (início):</b> ${esc(i.c)}</p>
+        <p style="margin:0;color:var(--muted)"><b>Fitoterapia / adjuvantes:</b> ${esc(i.f)}</p>
+      </div>`).join('')||'<p>Nenhum item encontrado.</p>';
+  };
+  document.getElementById('glBusca').addEventListener('input', render);
+  render();
+}
+
+
+/* ===== PRESCRIÇÃO FITOTERÁPICA + PEDIDO DE EXAMES ===== */
+const PLANTS_FITO = [
+{id:"hypericum",name:"Erva-de-São-João — Hypericum perforatum L.",form:"Erva-de-São-João (Hypericum perforatum L.). Extrato seco padronizado. A Farmacopeia Brasileira (Memento Fitoterápico) cita cápsulas e comprimidos contendo extrato seco e tintura.",dose:"Uso adulto: 0,8 a 1,2 mL da tintura 3 vezes ao dia OU extrato seco 300 mg, 3 vezes ao dia. (Memento Fitoterápico FB).",quantity:"Observação dos efeitos pode requerer 2 a 4 semanas. Duração conforme evolução clínica.",caution:"ALTO RISCO DE INTERAÇÕES. Contraindicado menores de 6 anos, gestantes e lactantes. Não usar em depressão grave. Fotossensibilização. Interage com ciclosporina, anticoagulantes cumarínicos, anticoncepcionais, teofilina, digoxina, indinavir e outros. Não associar com IMAO ou ISRS (síndrome serotoninérgica).",indication:"Estados depressivos leves a moderados."},
+{id:"passiflora",name:"Maracujá — Passiflora incarnata L.",form:"Maracujá (Passiflora incarnata L.). Planta fresca, droga vegetal encapsulada, extrato fluido e tintura (FB).",dose:"Adolescentes e adultos: infusão 1–2 g em 150 mL, 1–4×/dia. Encapsulada 0,5–2 g, 1–4×/dia. Extrato fluido (1:1 álcool 25%): 0,5–1,0 mL, 3×/dia. Tintura (1:8 álcool 45%): 0,5–2,0 mL, 3×/dia.",quantity:"Se sintomas persistirem >2 semanas, reavaliar. Uso crônico não recomendado sem supervisão.",caution:"Contraindicado na gravidez; cuidado com sedativos/depressores do SNC. Não recomendado gestantes, lactantes, alcoolistas e diabéticos sem orientação. Pode causar sonolência. Interações: barbitúricos, varfarina, IMAO.",indication:"Ansiolítico e sedativo leve."},
+{id:"maytenus",name:"Espinheira-santa — Maytenus ilicifolia Mart.",form:"Espinheira-santa (Maytenus ilicifolia Mart.). Cápsulas/comprimidos com extrato seco e infuso (FB).",dose:"Adultos e >12 anos. Extrato seco: 860 mg 2–3×/dia. Infuso: 3 g folhas secas / 150 mL, 3–4×/dia logo após preparo.",quantity:"Estudos propõem até ~28 dias; ajustar à evolução.",caution:"Contraindicado gravidez, lactação, <6 anos. Pode reduzir leite materno. Interações possíveis com esteroides anabolizantes, metotrexato, amiodarona, cetoconazol e imunossupressores.",indication:"Antidispéptico, antiácido e protetor da mucosa gástrica."},
+{id:"curcuma",name:"Cúrcuma / açafrão — Curcuma longa L.",form:"Cúrcuma (Curcuma longa L.). Infusão e tintura 10% em álcool 70% (Formulário de Fitoterápicos FB).",dose:">12 anos: 150 mL do infuso (1,5 g rizomas secos / 150 mL), 2×/dia. OU tintura 50–100 gotas (2,5–5 mL) em água, 1–3×/dia.",quantity:"Conforme indicação e evolução.",caution:"Contraindicado cálculos biliares, obstrução de ductos, úlcera gastroduodenal. Cuidado com anticoagulantes. Tintura: cautela em gestantes, lactantes, <2 anos, alcoolistas e diabéticos.",indication:"Antidispéptico e anti-inflamatório; colerético/colagogo (tintura)."},
+{id:"ginkgo",name:"Ginkgo biloba — Ginkgo biloba L.",form:"Extrato padronizado (22–27% flavonoides glicosilados; 5–7% lactonas terpênicas). Cápsula/comprimido e soluções orais (FB).",dose:"Extrato seco 120–240 mg/dia em 2–3 doses. Extrato fluido (1:1): 0,5 mL, 3×/dia.",quantity:"Conforme evolução. Suspender ≥3 dias antes de cirurgia.",caution:"Contraindicado <12 anos, grávidas, lactantes, hipersensibilidade. Risco hemorrágico com anticoagulantes/antiagregantes. Cuidado em epilepsia. Interações: varfarina, AINEs, clopidogrel, omeprazol, entre outras.",indication:"Vertigem/tinnitus de origem circulatória; distúrbios circulatórios periféricos."},
+{id:"valeriana",name:"Valeriana — Valeriana officinalis L.",form:"Raízes secas, extratos hidroetanólicos/aquosos e tintura (FB).",dose:">12 anos: extrato hidroetanólico equiv. 2–3 g; droga vegetal 0,3–1 g (cápsula) ou 1–3 g decocto; tintura (1:5 etanol 70%) 1–3 mL. Sedativo 1–3×/dia; sono: dose à noite.",quantity:"Uso continuado 2–4 semanas para efeito ótimo.",caution:"Contraindicado <12 anos, grávidas, lactantes. Sonolência. Potencializa depressores do SNC e álcool. Retirada abrupta após uso prolongado em altas doses pode causar sintomas de abstinência.",indication:"Sedativo moderado; distúrbios do sono associados à ansiedade."},
+{id:"guaco",name:"Guaco — Mikania glomerata Spreng.",form:"Infusão, tintura 20% álcool 70% e xarope (Formulário FB).",dose:">12 anos: infuso 150 mL (3 g folhas / 150 mL), 2×/dia. Tintura 2–7 mL em 75 mL água, 3×/dia. Xarope 5 mL, 3×/dia.",quantity:"Agudas: até 7 dias. Crônicas: até 2 semanas com reavaliação.",caution:"Xarope: cuidado em diabetes. Não usar gestantes, lactantes, <2 anos sem orientação. Cuidado com anticoagulantes e AINEs. Doses excessivas: vômitos e diarreia.",indication:"Expectorante."},
+{id:"melissa",name:"Melissa / erva-cidreira — Melissa officinalis L.",form:"Infusão de sumidades floridas (Formulário FB).",dose:">12 anos: 150 mL do infuso (1–4 g / 150 mL), 2–3×/dia, 10–15 min após preparo.",quantity:"Conforme evolução.",caution:"Evitar em hipotireoidismo; cautela na hipotensão.",indication:"Antiespasmódico, ansiolítico e sedativo leve."},
+{id:"cynara",name:"Alcachofra — Cynara scolymus L.",form:"Infusão e tintura 20% álcool 70% (Formulário FB).",dose:">12 anos: infuso 150 mL (1 g folhas / 150 mL) antes das refeições. Tintura 2,5–5 mL em 75 mL água, 1–3×/dia.",quantity:"Conforme evolução.",caution:"Contraindicado cálculos/obstrução biliar. Cuidado com anticoagulantes e alergia a Asteraceae. Tintura: cautela em gestantes, lactantes, <2 anos, alcoolistas, diabéticos.",indication:"Antidispéptico; antiflatulento/diurético (tintura)."},
+{id:"harpagophytum",name:"Garra-do-diabo — Harpagophytum procumbens",form:"Extrato seco padronizado em harpagosídeo/iridoides (FB).",dose:"1–3 g de raízes ou extrato equivalente. Extratos secos: conforme monografia (ex. 300 mg–2,4 g/dia divididos).",quantity:"Uso restrito a cerca de 2 semanas (Memento Fitoterápico) com reavaliação.",caution:"Contraindicado cálculos biliares, <18 anos, lactantes, grávidas. Cautela em úlcera, intestino irritável e cardiopatias. Pode causar distúrbios GI e cefaleia.",indication:"Dores articulares moderadas e lombalgia aguda."},
+{id:"chamomilla",name:"Camomila — Matricaria recutita L.",form:"Infusão para uso interno e externo (Formulário FB).",dose:"Interno >12 anos: 150 mL (3 g inflorescências / 150 mL), 3–4× entre refeições. Externo: bochechos/gargarejos com infuso mais concentrado (6–9 g / 100 mL), 3×/dia.",quantity:"Conforme evolução.",caution:"Alergia a Asteraceae. Superdosagem: náuseas, excitação, insônia. Evitar em gestantes (atividade emenagoga relatada).",indication:"Antiespasmódico/ansiolítico leve; anti-inflamatório oral tópico."}
+];
+
+function viewFitoterapia(c){
+  const pac=DB.pacientes.find(p=>p.id===(selectedPacienteId||DB.pacientes[0]&&DB.pacientes[0].id));
+  const opts=PLANTS_FITO.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('');
+  c.innerHTML=`
+  <div class="panel no-print">
+    <h2>Prescrição Fitoterápica</h2>
+    <p style="color:var(--muted);margin-top:0">Base: Guia/Farmacopeia de referência (minuta editável). Confirme monografia, dose e interações antes de assinar.</p>
+    <div class="row">
+      <div class="field"><label>Paciente</label>
+        <select id="ftPac" onchange="selectedPacienteId=+this.value;fillFitoPatient()">${pacOptions(pac&&pac.id)}</select>
+      </div>
+      <div class="field"><label>Planta / fitoterápico</label><select id="ftPlant">${opts}</select></div>
+      <div class="field"><label>Data</label><input id="ftDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Indicação / objetivo clínico</label><input id="ftInd" placeholder="Após avaliação clínica"></div>
+      <div class="field"><label>Quantidade / duração</label><input id="ftQty"></div>
+    </div>
+    <div class="field"><label>Forma farmacêutica / padronização</label><textarea id="ftForm"></textarea></div>
+    <div class="field"><label>Posologia</label><textarea id="ftDose"></textarea></div>
+    <div class="field"><label>Cuidados e interações</label><textarea id="ftCaut"></textarea></div>
+    <div class="field"><label>Observações / monitorização</label><textarea id="ftNotes" placeholder="Alergias, medicamentos em uso, gestação..."></textarea></div>
+    <div class="btns">
+      <button type="button" class="btn" onclick="loadFitoPlant()">Carregar dados da planta</button>
+      <button type="button" class="btn btn-primary" onclick="renderFitoPreview()">Atualizar receita</button>
+      <button type="button" class="btn btn-ok" onclick="imprimirA4()">Imprimir / PDF</button>
+    </div>
+  </div>
+  <div id="printArea" class="rx-preview panel">
+    <div class="rx-head">
+      <div class="brand">PRESCRIÇÃO FITOTERÁPICA<br><small style="font-weight:500;color:var(--muted)">Limanet · revisar e assinar</small></div>
+      <div style="text-align:right;font-size:12px"><strong>${esc(CONTATO.crn)}</strong><br>FITO/CRN4/0151/2026</div>
+    </div>
+    <div class="rx-title">RECEITUÁRIO FITOTERÁPICO</div>
+    <div class="rx-meta">
+      <div><strong>Paciente:</strong> <span id="fpPac">—</span></div>
+      <div><strong>Data:</strong> <span id="fpDate">—</span></div>
+      <div><strong>Nascimento:</strong> <span id="fpNasc">—</span></div>
+      <div><strong>Indicação:</strong> <span id="fpInd">—</span></div>
+    </div>
+    <div class="rx-section"><h3>Prescrição</h3><div class="rx-text" id="fpForm"></div></div>
+    <div class="rx-section"><h3>Posologia e modo de usar</h3><div class="rx-text" id="fpDose"></div></div>
+    <div class="rx-section"><h3>Quantidade / duração</h3><div class="rx-text" id="fpQty"></div></div>
+    <div class="rx-section"><h3>Cuidados e interações</h3><div class="rx-text" id="fpCaut"></div></div>
+    <div class="rx-section"><h3>Observações</h3><div class="rx-text" id="fpNotes"></div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:28px;font-size:12px;align-items:end">
+      <div><strong>Profissional:</strong> ${esc(CONTATO.nome)}<br>${esc(CONTATO.crn)}<br>FITO/CRN4/0151/2026</div>
+      <div class="sig-block">
+        <div class="sig-wrap">
+          <img class="stamp-img" src="https://i.imgur.com/MZ4bhuo.png" alt="Carimbo">
+          <div class="sig-line"></div>
+        </div>
+        <div class="sig-label">Assinatura e carimbo</div>
+      </div>
+    </div>
+    <div class="disclaimer"><strong>Nota:</strong> Minuta de apoio. A prescrição final depende de avaliação individual e da legislação profissional vigente.</div>
+  </div>`;
+  document.getElementById('ftPlant').addEventListener('change', loadFitoPlant);
+  loadFitoPlant();
+  fillFitoPatient();
+}
+function fillFitoPatient(){
+  const id=+(document.getElementById('ftPac')||{}).value||selectedPacienteId;
+  const pac=DB.pacientes.find(p=>p.id===id);
+  if(!pac) return;
+  selectedPacienteId=pac.id;
+}
+function loadFitoPlant(){
+  const id=(document.getElementById('ftPlant')||{}).value;
+  const p=PLANTS_FITO.find(x=>x.id===id)||PLANTS_FITO[0];
+  if(!p) return;
+  const set=(i,v)=>{const el=document.getElementById(i); if(el) el.value=v;};
+  set('ftForm',p.form); set('ftDose',p.dose); set('ftQty',p.quantity); set('ftCaut',p.caution); set('ftInd',p.indication);
+  renderFitoPreview();
+}
+function renderFitoPreview(){
+  const id=+(document.getElementById('ftPac')||{}).value;
+  const pac=DB.pacientes.find(p=>p.id===id);
+  const g=i=>(document.getElementById(i)||{}).value||'';
+  const d=g('ftDate'); let dPt=d; if(d&&d.includes('-')){const p=d.split('-'); dPt=p[2]+'/'+p[1]+'/'+p[0];}
+  const nasc=pac&&pac.nasc?(()=>{const p=pac.nasc.split('-');return p[2]+'/'+p[1]+'/'+p[0];})():'—';
+  document.getElementById('fpPac').textContent=pac?pac.nome:'—';
+  document.getElementById('fpDate').textContent=dPt||'—';
+  document.getElementById('fpNasc').textContent=nasc;
+  document.getElementById('fpInd').textContent=g('ftInd')||'—';
+  document.getElementById('fpForm').textContent=g('ftForm');
+  document.getElementById('fpDose').textContent=g('ftDose');
+  document.getElementById('fpQty').textContent=g('ftQty');
+  document.getElementById('fpCaut').textContent=g('ftCaut');
+  document.getElementById('fpNotes').textContent=g('ftNotes')||'Registrar alergias, medicamentos em uso e data de reavaliação.';
+}
+
+function viewReceitaExames(c){
+  const pac=DB.pacientes.find(p=>p.id===(selectedPacienteId||DB.pacientes[0]&&DB.pacientes[0].id));
+  const lista=[
+    'Hemograma completo','Ferritina','Ferro sérico','Vitamina D (25-OH)','Vitamina B12','Ácido fólico',
+    'Glicose de jejum','HbA1c','TSH','T4 livre','Colesterol total','HDL','LDL','Triglicerídeos',
+    'TGO','TGP','GGT','Creatinina','Ureia','PCR ultrasensível','Ácido úrico','Homocisteína',
+    'Parasitológico de fezes','Calprotectina fecal','Teste de hidrogênio expirado (SIBO) — se indicado'
+  ];
+  c.innerHTML=`
+  <div class="panel no-print">
+    <h2>Pedido de Exames</h2>
+    <div class="row">
+      <div class="field"><label>Paciente</label>
+        <select id="rxPac" onchange="selectedPacienteId=+this.value">${pacOptions(pac&&pac.id)}</select>
+      </div>
+      <div class="field"><label>Data</label><input id="rxDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+    </div>
+    <div class="row">
+      ${lista.map((n,i)=>`<label style="display:flex;align-items:center;gap:6px;min-width:220px;margin:4px 0">
+        <input type="checkbox" class="rxExCk" value="${esc(n)}"> ${esc(n)}
+      </label>`).join('')}
+    </div>
+    <div class="field"><label>Outros exames / orientações</label><textarea id="rxOutros" placeholder="Ex.: jejum de 12h; levar exames anteriores..."></textarea></div>
+    <div class="btns">
+      <button type="button" class="btn btn-primary" onclick="renderPedidoExames()">Gerar pedido</button>
+      <button type="button" class="btn btn-ok" onclick="imprimirA4()">Imprimir / PDF</button>
+    </div>
+  </div>
+  <div id="printArea" class="rx-preview panel">
+    <div class="rx-head">
+      <div class="brand">PEDIDO DE EXAMES<br><small style="font-weight:500;color:var(--muted)">Limanet · ${esc(CONTATO.nome)}</small></div>
+      <div style="text-align:right;font-size:12px"><strong>${esc(CONTATO.crn)}</strong></div>
+    </div>
+    <div class="rx-title">SOLICITAÇÃO DE EXAMES LABORATORIAIS</div>
+    <div class="rx-meta">
+      <div><strong>Paciente:</strong> <span id="rxpPac">—</span></div>
+      <div><strong>Data:</strong> <span id="rxpDate">—</span></div>
+      <div><strong>Nascimento:</strong> <span id="rxpNasc">—</span></div>
+      <div><strong>Sexo:</strong> <span id="rxpSexo">—</span></div>
+    </div>
+    <div class="rx-section"><h3>Exames solicitados</h3><div class="rx-text" id="rxpLista">—</div></div>
+    <div class="rx-section"><h3>Orientações</h3><div class="rx-text" id="rxpObs">—</div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:28px;font-size:12px;align-items:end">
+      <div><strong>Profissional:</strong> ${esc(CONTATO.nome)}<br>${esc(CONTATO.crn)}</div>
+      <div class="sig-block">
+        <div class="sig-wrap">
+          <img class="stamp-img" src="https://i.imgur.com/MZ4bhuo.png" alt="Carimbo">
+          <div class="sig-line"></div>
+        </div>
+        <div class="sig-label">Assinatura e carimbo</div>
+      </div>
+    </div>
+    <div class="legal-foot">Solicitação de exames laboratoriais estritamente necessários para a avaliação do estado nutricional, definição da conduta dietoterápica e monitoramento da evolução metabólica do(a) paciente, em conformidade com a <strong>Lei Federal nº 8.234/1991</strong> e <strong>Resolução CFN nº 306/2003</strong>.</div>
+  </div>`;
+}
+function renderPedidoExames(){
+  const id=+(document.getElementById('rxPac')||{}).value;
+  const pac=DB.pacientes.find(p=>p.id===id);
+  const d=(document.getElementById('rxDate')||{}).value||'';
+  let dPt=d; if(d.includes('-')){const p=d.split('-'); dPt=p[2]+'/'+p[1]+'/'+p[0];}
+  const nasc=pac&&pac.nasc?(()=>{const p=pac.nasc.split('-');return p[2]+'/'+p[1]+'/'+p[0];})():'—';
+  const checks=[...document.querySelectorAll('.rxExCk:checked')].map(x=>x.value);
+  const outros=(document.getElementById('rxOutros')||{}).value||'';
+  document.getElementById('rxpPac').textContent=pac?pac.nome:'—';
+  document.getElementById('rxpDate').textContent=dPt||'—';
+  document.getElementById('rxpNasc').textContent=nasc;
+  document.getElementById('rxpSexo').textContent=pac?(pac.sexo==='M'?'Masculino':'Feminino'):'—';
+  document.getElementById('rxpLista').textContent=checks.length?checks.map((x,i)=>(i+1)+'. '+x).join('\n'):'—';
+  document.getElementById('rxpObs').textContent=outros||'Seguir orientações de preparo do laboratório.';
+}
+
+
+function viewGemini(c){
+  const key = localStorage.getItem('limanet_gemini_key') || '';
+  c.innerHTML = `
+  <div class="panel">
+    <h2>Assistente Gemini · apoio clínico</h2>
+    <p style="color:var(--muted);margin-top:0">Sugestões educacionais em nutrição. <b>Não substitui</b> julgamento clínico, prescrição nem protocolos. A chave API configura-se em <b>Utilitários → Configurações</b>.</p>
+    <div class="row">
+      <div class="field"><label>Paciente (contexto opcional)</label>
+        <select id="gemPac"><option value="">— sem paciente —</option>${pacOptions(selectedPacienteId)}</select>
+      </div>
+      <div class="field"><label>Modo</label>
+        <select id="gemMode">
+          <option value="geral">Dúvida geral de nutrição</option>
+          <option value="plano">Ideias de plano alimentar</option>
+          <option value="exame">Interpretação educacional de exames</option>
+          <option value="fito">Fitoterapia (referência FB / cautelas)</option>
+        </select>
+      </div>
+    </div>
+    <div id="gemLog" class="gemini-log"><div class="gemini-msg bot"><div class="who">Gemini</div>Olá. Em que posso ajudar na consulta?</div></div>
+    <div class="field"><label>Sua pergunta</label>
+      <textarea id="gemPrompt" rows="3" placeholder="Ex.: Orientações alimentares iniciais para SII em adulto, sem prescrever doses de suplementos."></textarea>
+    </div>
+    <div class="btns">
+      <button type="button" class="btn btn-primary" id="gemSend">Enviar</button>
+      <button type="button" class="btn" onclick="document.getElementById('gemLog').innerHTML='';document.getElementById('gemPrompt').value=''">Limpar</button>
+      <button type="button" class="btn" onclick="showView('config')">Configurar chave API</button>
+    </div>
+    <p style="font-size:11px;color:var(--muted);margin-top:10px">Modelo: gemini-2.5-flash · chave: ${key ? 'configurada neste navegador' : '<b style="color:var(--danger)">não configurada</b>'}</p>
+  </div>`;
+  document.getElementById('gemSend').onclick = enviarGemini;
+  document.getElementById('gemPrompt').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) enviarGemini();
+  });
+}
+async function enviarGemini(){
+  const key = (localStorage.getItem('limanet_gemini_key') || '').trim();
+  const prompt = (document.getElementById('gemPrompt').value || '').trim();
+  const log = document.getElementById('gemLog');
+  if (!key) { toast('Configure a chave Gemini em Configurações'); showView('config'); return; }
+  if (!prompt) { toast('Escreva uma pergunta'); return; }
+
+  const pacId = +(document.getElementById('gemPac').value || 0);
+  const pac = DB.pacientes.find(p => p.id === pacId);
+  const mode = (document.getElementById('gemMode') || {}).value || 'geral';
+  const modeHint = {
+    geral: 'Responda como apoio a nutricionista brasileiro (CFN). Seja objetivo e cite quando for referência geral.',
+    plano: 'Sugira estrutura de plano alimentar educacional (refeições, grupos), sem cardápio rígido prescritivo.',
+    exame: 'Comente exames em tom educacional; não diagnostique; indique quando reavaliar com médico.',
+    fito: 'Fale de fitoterápicos com cautela: monografia, interações, gravidez; não incentive automedicação.'
+  }[mode] || '';
+
+  let ctx = modeHint + '\nResponda em português do Brasil.';
+  if (pac) {
+    const idade = ageFrom(pac.nasc);
+    ctx += `\nContexto do paciente (só para raciocínio): nome ${pac.nome}, sexo ${pac.sexo}, idade ${idade}, peso ${pac.peso||'?'} kg, altura ${pac.altura||'?'} m.`;
+  }
+
+  log.insertAdjacentHTML('beforeend', `<div class="gemini-msg user"><div class="who">Você</div>${esc(prompt)}</div>`);
+  document.getElementById('gemPrompt').value = '';
+  const pending = document.createElement('div');
+  pending.className = 'gemini-msg bot';
+  pending.innerHTML = '<div class="who">Gemini</div>A processar…';
+  log.appendChild(pending);
+  log.scrollTop = log.scrollHeight;
+
+  const model = 'gemini-2.5-flash';
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(key)}`;
+  try {
+    const r = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: ctx + '\n\nPergunta do profissional:\n' + prompt }] }],
+        generationConfig: { temperature: 0.6 }
+      })
+    });
+    const data = await r.json();
+    if (!r.ok) {
+      pending.className = 'gemini-msg error';
+      pending.innerHTML = `<div class="who">Erro</div>${esc(data.error?.message || r.statusText || 'Falha na API')}`;
+      return;
+    }
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (text) {
+      pending.className = 'gemini-msg bot';
+      pending.innerHTML = `<div class="who">Gemini</div>${esc(text)}`;
+    } else if (data.promptFeedback?.blockReason) {
+      pending.className = 'gemini-msg error';
+      pending.innerHTML = `<div class="who">Bloqueado</div>${esc(data.promptFeedback.blockReason)}`;
+    } else {
+      pending.className = 'gemini-msg error';
+      pending.innerHTML = '<div class="who">Erro</div>Resposta vazia ou inesperada.';
+    }
+  } catch (e) {
+    pending.className = 'gemini-msg error';
+    pending.innerHTML = `<div class="who">Erro</div>${esc(e.message || 'Rede')}`;
+  }
+  log.scrollTop = log.scrollHeight;
+}
+
+function viewSobre(c){
+  c.innerHTML=`
+  <div class="panel">
+    <h2>Sobre o Limanet</h2>
+    <p><b>Limanet</b> — sistema de avaliação e terapia nutricional.</p>
+    <p><b>${esc(CONTATO.nome)}</b> · ${esc(CONTATO.crn)}</p>
+    <p>Módulos disponíveis:</p>
+    <ul>
+      <li>Cadastro de pacientes, alimentos, grupos e patologias</li>
+      <li>Anamnese · Antropometria · Cálculos energéticos</li>
+      <li>Plano alimentar / cardápio</li>
+      <li>Guia de equivalências · Gestante · Exames laboratoriais</li>
+      <li>Teia metabólica + checklist de sinais/sintomas de micronutrientes</li>
+      <li>Intolerâncias e alergias alimentares</li>
+      <li>Agenda · Relatórios · Backup JSON</li>
+    </ul>
+    <div class="contactFooter">
+      WhatsApp: <a href="https://wa.me/${CONTATO.whatsapp}" target="_blank" rel="noopener">+55 21 98680-7805</a><br>
+      Site: <a href="${CONTATO.site}" target="_blank" rel="noopener">sites.google.com/view/dr-francisco-lima-nutri</a>
+    </div>
+    <p style="margin-top:12px;color:var(--muted)">Os dados dos pacientes ficam armazenados <b>localmente no navegador</b> (localStorage), não há banco de dados em servidor. Use Backup para exportar JSON.</p>
+
+  </div>`;
+}
+
+// Enter no login
+document.getElementById('loginPass').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
+function atualizarRelogio(){
+  const el=document.getElementById('topoRelogio');
+  if(!el) return;
+  const d=new Date();
+  const pad=n=>String(n).padStart(2,'0');
+  el.textContent = pad(d.getDate())+'/'+pad(d.getMonth()+1)+'/'+d.getFullYear()+' '+pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds());
+}
+setInterval(atualizarRelogio,1000);
+atualizarRelogio();
+</script>
+</body>
+</html>
