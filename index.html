@@ -1,6 +1,4 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
+<html lang="pt-BR"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Limanet — Sistema de Nutrição</title>
@@ -176,7 +174,7 @@ tr.clickable:hover{background:#e3f2fa}
 <div id="app">
   <div class="topbar">
     <span class="brand">Limanet</span>
-    <span style="opacity:.85;font-size:12px">CRN-4 26101256 · <span id="topoRelogio"></span></span>
+    <span style="opacity:.85;font-size:12px">CRN-4 26101256 · <span id="topoRelogio">25/10/2026 01:28:24</span></span>
     <span class="user" id="lblUser"></span>
     <button onclick="doLogout()">Sair</button>
   </div>
@@ -1192,6 +1190,33 @@ function importBackup(ev){
   r.readAsText(f);
 }
 
+
+function salvarConfigLimanet(){
+  const nomeEl=document.getElementById('cfgNome');
+  const crnEl=document.getElementById('cfgCrn');
+  const emailEl=document.getElementById('cfgEmail');
+  const waEl=document.getElementById('cfgWa');
+  const gemEl=document.getElementById('cfgGemini');
+  if(nomeEl){ DB.user.nome=nomeEl.value.trim(); CONTATO.nome=DB.user.nome; }
+  if(crnEl){ DB.user.crn=crnEl.value.trim(); CONTATO.crn=DB.user.crn; }
+  if(emailEl) CONTATO.email=emailEl.value.trim();
+  if(waEl) CONTATO.whatsapp=waEl.value.replace(/\D/g,'');
+  if(gemEl){
+    const k=(gemEl.value||'').trim();
+    if(k) localStorage.setItem('limanet_gemini_key', k);
+    else localStorage.removeItem('limanet_gemini_key');
+  }
+  saveDB();
+  const lbl=document.getElementById('lblUser');
+  if(lbl) lbl.textContent=DB.user.nome+' · '+(DB.user.crn||'');
+  const st=document.getElementById('cfgGeminiStatus');
+  const has=!!(localStorage.getItem('limanet_gemini_key')||'').trim();
+  if(st) st.innerHTML = has
+    ? '<span style="color:var(--ok)">Chave Gemini gravada neste navegador.</span>'
+    : '<span style="color:var(--danger)">Nenhuma chave Gemini gravada.</span>';
+  toast(has ? 'Configurações e chave Gemini salvas' : 'Configurações salvas (sem chave Gemini)');
+}
+
 function viewConfig(c){
   c.innerHTML=`
   <div class="panel">
@@ -1204,18 +1229,15 @@ function viewConfig(c){
       <input id="cfgGemini" type="password" value="${esc(localStorage.getItem('limanet_gemini_key')||'')}" placeholder="AIza...">
     </div>
     <p style="color:var(--muted);font-size:12px">Obtenha em <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a>. Não partilhe a chave. Se já foi exposta, gere uma nova.</p>
-    <div class="btns"><button class="btn btn-primary" onclick="
-      DB.user.nome=$('#cfgNome').value;
-      DB.user.crn=$('#cfgCrn').value;
-      CONTATO.nome=DB.user.nome; CONTATO.crn=DB.user.crn;
-      CONTATO.email=$('#cfgEmail').value.trim();
-      CONTATO.whatsapp=$('#cfgWa').value.replace(/\\D/g,'');
-      saveDB();
-      document.getElementById('lblUser').textContent=DB.user.nome+' · '+DB.user.crn;
-      toast('Configurações salvas');
-    ">Salvar</button></div>
+<div class="btns"><button type="button" class="btn btn-primary" onclick="salvarConfigLimanet()">Salvar</button></div>
+    <p id="cfgGeminiStatus" style="font-size:12px;color:var(--muted)"></p>
     <p style="margin-top:12px;color:var(--muted)">Armazenamento: <b>localStorage</b> do navegador (chave <code>limanet_v1</code>). Não há servidor nem banco Access. Faça backup periódico em Utilitários.</p>
   </div>`;
+  const st=document.getElementById('cfgGeminiStatus');
+  const has=!!(localStorage.getItem('limanet_gemini_key')||'').trim();
+  if(st) st.innerHTML = has
+    ? '<span style="color:var(--ok)">Chave Gemini já gravada neste navegador.</span>'
+    : '<span style="color:var(--danger)">Cole a chave e clique em Salvar.</span>';
 }
 
 /* ===== EQUIVALÊNCIAS ===== */
@@ -2051,5 +2073,6 @@ function atualizarRelogio(){
 setInterval(atualizarRelogio,1000);
 atualizarRelogio();
 </script>
-</body>
-</html>
+
+
+</body></html>
