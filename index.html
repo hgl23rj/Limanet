@@ -4,7 +4,7 @@
 <title>Limanet — Sistema de Nutrição</title>
 <style>
 :root{
-  --bg:#e8f0ea; --panel:#fff; --line:#c5d5c8; --text:#1a2a35; --muted:#5a6f7d;
+  --bg:#d0d4d8; --panel:#fff; --line:#c5d5c8; --text:#1a2a35; --muted:#5a6f7d;
   --primary:#2d6a4f; --primary2:#1b4332; --accent:#40916c; --danger:#c0392b;
   --menu:#1b4332; --menuHover:#2d6a4f; --header:#1b4332;
   --ok:#1e7e4a; --warn:#b8860b;
@@ -18,7 +18,8 @@ button{cursor:pointer}
 /* LOGIN */
 #loginScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,#1b4332,#2d6a4f 50%,#52b788)}
 .loginBox{background:#fff;border-radius:10px;padding:32px 36px;width:min(400px,94vw);box-shadow:0 20px 60px rgba(0,0,0,.35)}
-.loginBox h1{margin:0 0 4px;font-size:1.6rem;color:var(--primary2)}
+.loginLogo{display:block;width:104px;height:104px;object-fit:contain;margin:0 auto 14px;border-radius:12px}
+.loginBox h1{margin:0 0 4px;font-size:1.6rem;color:var(--primary2);text-align:center}
 .loginBox .sub{color:var(--muted);margin-bottom:22px}
 .contactFooter{margin-top:18px;padding-top:14px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);line-height:1.6}
 .contactFooter a{color:var(--primary);font-weight:600;text-decoration:none}
@@ -62,22 +63,23 @@ button{cursor:pointer}
 .rx-preview .legal-foot{margin-top:18px;font-size:9.5px;line-height:1.35;color:#444;text-align:justify;border-top:1px solid #ccc;padding-top:10px}
 @page{size:A4 portrait;margin:12mm}
 @media print{
-  html,body{width:210mm;height:297mm;margin:0!important;padding:0!important;background:#fff!important}
+  html,body{width:210mm;min-height:297mm;height:auto!important;margin:0!important;padding:0!important;background:#fff!important;overflow:visible!important}
   body *{visibility:hidden!important}
   #printArea, #printArea *{visibility:visible!important}
   #printArea{
     position:absolute;left:0;top:0;width:186mm;max-width:186mm;
-    padding:0;margin:0;box-sizing:border-box;
-    background:#fff!important;border:0!important;box-shadow:none!important;border-radius:0!important
+    padding:12px;margin:0;box-sizing:border-box;
+    background:#fff!important;border:0!important;box-shadow:none!important;border-radius:0!important;
+    overflow:visible!important;height:auto!important;max-height:none!important
   }
-  .no-print,.menubar,.topbar,.sidebar,.statusBar,#loginScreen,.toast{display:none!important}
+  #printArea section,#printArea div,#printArea p,#printArea pre{overflow:visible!important;max-height:none!important}
+  .no-print,.menubar,.topbar,.sidebar,.statusBar,#loginScreen,.toast,.gemini-log{display:none!important}
   .rx-preview .stamp-img{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .panel{box-shadow:none!important;border:0!important;background:#fff!important}
-  /* fallback: imprimir conteúdo da consulta quando não há #printArea */
   body.print-content #content,
   body.print-content #content *{visibility:visible!important}
   body.print-content #content{
-    position:absolute;left:0;top:0;width:186mm;padding:0;margin:0
+    position:absolute;left:0;top:0;width:186mm;padding:0;margin:0;height:auto!important;overflow:visible!important
   }
   body.print-content .no-print{display:none!important}
 }
@@ -97,6 +99,8 @@ button{cursor:pointer}
 #app{display:none;height:100vh;flex-direction:column}
 #app.on{display:flex}
 .topbar{background:linear-gradient(90deg,#1b4332 0%,#2d6a4f 45%,#52b788 100%);color:#fff;display:flex;align-items:center;gap:16px;padding:0 12px;height:46px;flex-shrink:0}
+.topbar .brand-wrap{display:flex;align-items:center;gap:8px;min-width:0}
+.topbar .brand-logo{width:30px;height:30px;object-fit:contain;border-radius:5px;background:#fff;padding:2px}
 .topbar .brand{font-weight:800;letter-spacing:.03em;font-size:16px}
 .topbar .user{margin-left:auto;font-size:12px;opacity:.9}
 .topbar button{background:transparent;border:1px solid rgba(255,255,255,.3);color:#fff;padding:4px 10px;border-radius:4px}
@@ -119,7 +123,7 @@ button{cursor:pointer}
 .sidebar h3{margin:0 0 8px;font-size:12px;text-transform:uppercase;color:var(--muted);letter-spacing:.04em}
 .sidebar button{display:block;width:100%;text-align:left;padding:8px 10px;margin-bottom:3px;border:1px solid transparent;background:transparent;border-radius:5px}
 .sidebar button:hover,.sidebar button.active{background:#d6ebf5;border-color:#a8c8d8}
-.content{flex:1;overflow:auto;padding:16px}
+.content{flex:1;overflow:auto;padding:16px;background:#c8ccd0}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
 .panel h2{margin:0 0 12px;font-size:1.15rem;color:var(--primary2);border-bottom:2px solid #d0e4ef;padding-bottom:8px}
 .row{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:10px}
@@ -158,8 +162,9 @@ tr.clickable:hover{background:#e3f2fa}
 <body>
 
 <!-- LOGIN -->
-<div id="loginScreen">
+<div id="loginScreen" class="">
   <div class="loginBox">
+    <img class="loginLogo" src="https://i.imgur.com/2z9RVoJ.png" alt="Logo Limanet" referrerpolicy="no-referrer">
     <h1>Limanet</h1>
     <div class="sub">Sistema de Avaliação e Terapia Nutricional<br>Dr. Francisco Lima · CRN-4 26101256</div>
     <label for="loginUser">Login do usuário</label>
@@ -171,10 +176,10 @@ tr.clickable:hover{background:#e3f2fa}
 </div>
 
 <!-- APP -->
-<div id="app">
+<div id="app" class="">
   <div class="topbar">
-    <span class="brand">Limanet</span>
-    <span style="opacity:.85;font-size:12px">CRN-4 26101256 · <span id="topoRelogio">25/10/2026 01:28:24</span></span>
+    <span class="brand-wrap"><img class="brand-logo" src="https://i.imgur.com/AHJ88Yz.jpeg" alt="" referrerpolicy="no-referrer"><span class="brand">Limanet</span></span>
+    <span style="opacity:.85;font-size:12px">CRN-4 26101256 · <span id="topoRelogio">25/10/2026 12:31:02</span></span>
     <span class="user" id="lblUser"></span>
     <button onclick="doLogout()">Sair</button>
   </div>
@@ -243,7 +248,7 @@ tr.clickable:hover{background:#e3f2fa}
   <div class="main">
     <aside class="sidebar" id="sidebar">
       <h3>Acesso rápido</h3>
-      <button type="button" data-view="inicio" class="active">Início Rápido</button>
+      <button type="button" data-view="inicio" class="">Início Rápido</button>
       <button type="button" data-view="pacientes">Pacientes</button>
       <button type="button" data-view="antropometria">Antropometria</button>
       <button type="button" data-view="energia">Cálculos Energéticos</button>
@@ -259,14 +264,14 @@ tr.clickable:hover{background:#e3f2fa}
       <button type="button" data-view="glossario">Glossário</button>
       <button type="button" data-view="fitoterapia">Fitoterapia</button>
       <button type="button" data-view="receitaExames">Pedido de Exames</button>
-      <button type="button" data-view="gemini">Assistente Gemini</button>
+      <button type="button" data-view="gemini" class="active">Assistente Gemini</button>
     </aside>
     <div class="content" id="content"></div>
   </div>
-  <div class="statusBar" id="statusBar">Pronto</div>
+  <div class="statusBar" id="statusBar">Módulo: gemini</div>
 </div>
 
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast">Sessão encerrada</div>
 
 <script>
 /* ========= STORAGE ========= */
@@ -449,8 +454,20 @@ function doLogout(){
   sessionStorage.removeItem('limanet_token');
   sessionStorage.removeItem('limanet_nome');
   sessionStorage.removeItem('limanet_crn');
+  // Segurança em computador partilhado: remove chave Gemini da memória do browser
+  try { localStorage.removeItem('limanet_gemini_key'); } catch (_) {}
+  const lbl = document.getElementById('lblUser');
+  if (lbl) lbl.textContent = '';
+  const u = document.getElementById('loginUser');
+  const pw = document.getElementById('loginPass');
+  if (u) u.value = '';
+  if (pw) pw.value = '';
+  // Limpa área visível da app (evita resquícios do utilizador anterior)
+  const content = document.getElementById('content');
+  if (content) content.innerHTML = '';
   document.getElementById('app').classList.remove('on');
   document.getElementById('loginScreen').classList.remove('hidden');
+  toast('Sessão encerrada');
 }
 
 /* ========= MENU ========= */
@@ -1960,15 +1977,146 @@ function viewGemini(c){
     </div>
     <div class="btns">
       <button type="button" class="btn btn-primary" id="gemSend">Enviar</button>
-      <button type="button" class="btn" onclick="document.getElementById('gemLog').innerHTML='';document.getElementById('gemPrompt').value=''">Limpar</button>
+      <button type="button" class="btn" id="gemPrint">Baixar PDF</button>
+      <button type="button" class="btn" id="gemClear">Limpar</button>
       <button type="button" class="btn" onclick="showView('config')">Configurar chave API</button>
     </div>
     <p style="font-size:11px;color:var(--muted);margin-top:10px">Modelo: gemini-2.5-flash · chave: ${key ? 'configurada neste navegador' : '<b style="color:var(--danger)">não configurada</b>'}</p>
   </div>`;
   document.getElementById('gemSend').onclick = enviarGemini;
+  document.getElementById('gemPrint').onclick = imprimirGemini;
+  document.getElementById('gemClear').onclick = () => {
+    document.getElementById('gemLog').innerHTML = '<div class="gemini-msg bot"><div class="who">Gemini</div>Olá. Em que posso ajudar na consulta?</div>';
+    document.getElementById('gemPrompt').value = '';
+  };
   document.getElementById('gemPrompt').addEventListener('keydown', e => {
     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) enviarGemini();
   });
+}
+function loadJsPdfLib(){
+  if (window.jspdf && window.jspdf.jsPDF) return Promise.resolve(window.jspdf.jsPDF);
+  return new Promise(function(resolve, reject){
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    s.onload = function(){
+      if (window.jspdf && window.jspdf.jsPDF) resolve(window.jspdf.jsPDF);
+      else reject(new Error('jsPDF não carregou'));
+    };
+    s.onerror = function(){ reject(new Error('Falha ao carregar jsPDF (rede/CDN)')); };
+    document.head.appendChild(s);
+  });
+}
+function imprimirGemini(){
+  baixarPdfGemini();
+}
+async function baixarPdfGemini(){
+  const log = document.getElementById('gemLog');
+  if (!log) { toast('Nada para exportar'); return; }
+
+  const blocks = [...log.querySelectorAll('.gemini-msg')];
+  const fullText = (log.innerText || '').trim();
+  if (!blocks.length && !fullText) { toast('Nada para exportar'); return; }
+
+  const pacSel = document.getElementById('gemPac');
+  const pacTxt = pacSel && pacSel.value ? ((pacSel.options[pacSel.selectedIndex] || {}).text || '') : '';
+  const when = new Date().toLocaleString('pt-BR');
+  const prof = (DB.user && DB.user.nome) || '';
+  const crn = (DB.user && DB.user.crn) || '';
+
+  const parts = [];
+  if (blocks.length) {
+    blocks.forEach(el => {
+      const whoEl = el.querySelector('.who');
+      const who = (whoEl && whoEl.textContent || '').trim() || 'Mensagem';
+      let text = (el.textContent || '');
+      if (who && text.startsWith(who)) text = text.slice(who.length);
+      text = text.replace(/^\s+/, '').trim();
+      if (!text || /^A processar/i.test(text)) return;
+      parts.push({ who: who, text: text });
+    });
+  }
+  if (!parts.length && fullText) {
+    parts.push({ who: 'Conversa', text: fullText });
+  }
+  if (!parts.length) { toast('Nada para exportar'); return; }
+
+  toast('A gerar PDF…');
+  let JsPDF;
+  try {
+    JsPDF = await loadJsPdfLib();
+  } catch (e) {
+    toast(e.message || 'Não foi possível carregar a biblioteca PDF');
+    return;
+  }
+
+  try {
+    const doc = new JsPDF({ unit: 'mm', format: 'a4' });
+    const margin = 14;
+    const pageW = doc.internal.pageSize.getWidth();
+    const pageH = doc.internal.pageSize.getHeight();
+    const maxW = pageW - margin * 2;
+    let y = margin;
+
+    function ensureSpace(h){
+      if (y + h > pageH - margin) {
+        doc.addPage();
+        y = margin;
+      }
+    }
+    function writeText(str, fontSize, style, color){
+      doc.setFont('helvetica', style || 'normal');
+      doc.setFontSize(fontSize || 11);
+      if (color) doc.setTextColor(color[0], color[1], color[2]);
+      else doc.setTextColor(20, 20, 20);
+      const lines = doc.splitTextToSize(String(str || ''), maxW);
+      const lineH = (fontSize || 11) * 0.42;
+      lines.forEach(line => {
+        ensureSpace(lineH + 1);
+        doc.text(line, margin, y);
+        y += lineH;
+      });
+    }
+
+    writeText('Limanet — Assistente Gemini', 16, 'bold', [27, 67, 50]);
+    y += 2;
+    writeText('Apoio educacional · ' + when, 10, 'normal', [80, 80, 80]);
+    y += 2;
+    writeText('Profissional: ' + prof + (crn ? '  ·  ' + crn : ''), 10, 'normal', [40, 40, 40]);
+    if (pacTxt) writeText('Paciente: ' + pacTxt, 10, 'normal', [40, 40, 40]);
+    y += 3;
+    doc.setDrawColor(180);
+    doc.line(margin, y, pageW - margin, y);
+    y += 6;
+
+    parts.forEach((p, idx) => {
+      ensureSpace(12);
+      writeText(p.who, 11, 'bold', [27, 67, 50]);
+      y += 1;
+      writeText(p.text, 11, 'normal', [20, 20, 20]);
+      y += 4;
+      if (idx < parts.length - 1) {
+        ensureSpace(4);
+        doc.setDrawColor(220);
+        doc.line(margin, y, pageW - margin, y);
+        y += 5;
+      }
+    });
+
+    y += 4;
+    ensureSpace(16);
+    doc.setDrawColor(180);
+    doc.line(margin, y, pageW - margin, y);
+    y += 5;
+    writeText('Documento de apoio gerado no Limanet. Não substitui avaliação clínica presencial, prescrição nem conduta formal.', 9, 'normal', [90, 90, 90]);
+
+    const safeName = (pacTxt || 'gemini').replace(/[^\wÀ-ú]+/gi, '_').slice(0, 40);
+    const fname = 'Limanet_Gemini_' + safeName + '_' + Date.now() + '.pdf';
+    doc.save(fname);
+    toast('PDF descarregado: ' + fname);
+  } catch (err) {
+    console.error(err);
+    toast('Erro ao gerar PDF: ' + (err.message || err));
+  }
 }
 async function enviarGemini(){
   const key = (localStorage.getItem('limanet_gemini_key') || '').trim();
